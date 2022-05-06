@@ -1,0 +1,30 @@
+{{define "content"}}
+<p>День рождения: {{ .Data.Profile.BirthDateFmt}}</p>
+<p>Город: {{ .Data.Profile.City.Name}}</p>
+<div>
+    <p>Интересы:</p>
+    <ul>
+        {{range .Data.Profile.Interests}}
+        <li>{{.Name}}</li>
+        {{end}}
+    </ul>
+</div>
+<div>
+    {{if .Data.FriendshipProposed}}
+    <mark>Заявка на добавление в друзья отправлена</mark>
+    {{else}}
+    <form action="/make-friend" method="post">
+        <input type="hidden" name="other_profile_id" value="{{ .Data.Profile.ID}}">
+        <input type="submit" value="Подружиться">
+    </form>
+    {{end}}
+</div>
+<div>
+    <p>Друзья:</p>
+    <ul>
+        {{range .Data.Profile.Friends}}
+        <li><a href="/profile?id={{.ID}}">{{.Name}} {{.Surname}}</a></li>
+        {{end}}
+    </ul>
+</div>
+{{end}}

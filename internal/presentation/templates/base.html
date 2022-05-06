@@ -1,0 +1,17 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
+    <title>Социальная сеть №1</title>
+</head>
+<body>
+    <main class="container">
+        <h1>{{ .Title}}</h1>
+
+        <div>{{block "content" .}}{{end}}</div>
+    </main>
+</body>
+</html>
+{{end}}

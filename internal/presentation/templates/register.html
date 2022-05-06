@@ -1,0 +1,25 @@
+{{define "content"}}
+<form action="/register" method="post">
+    <p><input
+            name="login"
+            placeholder="Логин"
+            maxlength="32"
+            required
+    ></p>
+    <p><input
+            name="password"
+            type="password"
+            placeholder="Пароль"
+            maxlength="32"
+            required
+    ></p>
+    <p><input
+            name="password_confirm"
+            type="password"
+            placeholder="Пароль еще раз"
+            maxlength="32"
+            required
+    ></p>
+    <p><button>Зарегистрироваться</button></p>
+</form>
+{{end}}
