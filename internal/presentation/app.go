@@ -43,7 +43,7 @@ func (a *App) Run() error {
 	mux.HandleFunc("/", a.Home)
 
 	srv := &http.Server{
-		Addr:    ":8181",
+		Addr:    ":80",
 		Handler: mux,
 	}
 
