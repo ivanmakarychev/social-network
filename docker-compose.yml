@@ -1,0 +1,19 @@
+version: "3"
+
+services:
+  db:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 65hh0x21GJmlqM
+      MYSQL_USER: social-network-user
+      MYSQL_PASSWORD: sQ7mDXwwLcfq
+      MYSQL_DATABASE: social-network
+
+  app:
+    image: social-network
+    ports:
+      - 80:80
+    restart: always
+    depends_on:
+      - db
