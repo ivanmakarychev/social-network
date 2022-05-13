@@ -1,0 +1,13 @@
+{{define "content"}}
+<div>
+    {{if not .Data.Profiles}}
+    <p>Поиск не дал результата</p>
+    {{else}}
+    <ul>
+        {{range .Data.Profiles}}
+        <li><a href="/profile?id={{.ID}}">{{.Name}} {{.Surname}}</a></li>
+        {{end}}
+    </ul>
+    {{end}}
+</div>
+{{end}}

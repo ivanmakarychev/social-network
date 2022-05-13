@@ -38,6 +38,7 @@ func (a *App) Run() error {
 	mux.HandleFunc("/register", a.Register)
 	mux.HandleFunc("/my/profile", a.BasicAuth(a.MyProfile))
 	mux.HandleFunc("/profile", a.Profile)
+	mux.HandleFunc("/profiles", a.FindProfiles)
 	mux.HandleFunc("/make-friend", a.BasicAuth(a.MakeFriend))
 	mux.HandleFunc("/confirm-friendship", a.BasicAuth(a.ConfirmFriendship))
 	mux.HandleFunc("/", a.Home)

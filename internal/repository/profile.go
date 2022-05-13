@@ -14,6 +14,12 @@ type ProfileRepo interface {
 	GetProfile(userID models.ProfileID) (models.Profile, error)
 	CreateProfileID() (models.ProfileID, error)
 	SaveProfile(profile models.Profile) error
+	FindProfiles(request FindProfilesRequest) ([]models.Profile, error)
+}
+
+type FindProfilesRequest struct {
+	NamePrefix    string
+	SurnamePrefix string
 }
 
 type ProfileRepoImpl struct {
@@ -186,4 +192,32 @@ func (p *ProfileRepoImpl) GetProfile(userID models.ProfileID) (models.Profile, e
 	}
 
 	return profile, nil
+}
+
+func (p *ProfileRepoImpl) FindProfiles(request FindProfilesRequest) ([]models.Profile, error) {
+	query, args, err := squirrel.Select("profile_id", "name", "surname").
+		From(fmt.Sprintf("%s p", profileTableName)).
+		Where(squirrel.Like{
+			"name":    request.NamePrefix + "%",
+			"surname": request.SurnamePrefix + "%"}).
+		OrderBy("profile_id").
+		ToSql()
+	if err != nil {
+		return nil, err
+	}
+	rows, err := p.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var result []models.Profile
+	for rows.Next() {
+		var profile models.Profile
+		err = rows.Scan(&profile.ID, &profile.Name, &profile.Surname)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, profile)
+	}
+	return result, nil
 }
