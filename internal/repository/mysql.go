@@ -9,16 +9,20 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
+
+	"github.com/ivanmakarychev/social-network/internal/config"
 )
 
-func CreateMySQLConnectionAndInitDB() (*sql.DB, error) {
+func CreateMySQLConnectionAndInitDB(cfg config.Database) (*sql.DB, error) {
 	log.Println("creating mysql connection")
-	return createMySQLConnectionWithRetry(60)
+	return createMySQLConnectionWithRetry(cfg, 60)
 }
 
-func createMySQLConnectionWithRetry(retries int) (*sql.DB, error) {
-	const dbSource = "social-network-user:sQ7mDXwwLcfq@(db:3306)/social-network?parseTime=true"
+func createMySQLConnectionWithRetry(cfg config.Database, retries int) (*sql.DB, error) {
+	const dbSourceFmt = "%s:%s@(%s)/social-network?parseTime=true"
+	dbSource := fmt.Sprintf(dbSourceFmt, cfg.User, cfg.Password, cfg.Master)
+
 	db, err := sql.Open("mysql", dbSource)
 	for i := 0; err != nil && i < retries; i++ {
 		log.Println("retrying opening db")
@@ -75,6 +79,7 @@ func initDB(db *sql.DB) error {
 			sb.Reset()
 			log.Println("[query]", query)
 			_, err = db.Exec(query)
+			err = checkError(err)
 			if err != nil {
 				log.Println("[init db] bad query:", query, "[error]", err)
 				return fmt.Errorf("failed to execute sql script file: %s", err)
@@ -86,4 +91,16 @@ func initDB(db *sql.DB) error {
 	log.Println("init DB finished.", counter, "queries executed")
 
 	return nil
+}
+
+func checkError(err error) error {
+	me, ok := err.(*mysql.MySQLError)
+	if !ok {
+		return err
+	}
+	const duplicateKey = uint16(1061)
+	if me.Number == duplicateKey {
+		return nil
+	}
+	return err
 }

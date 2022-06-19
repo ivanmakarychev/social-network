@@ -1,15 +1,18 @@
 package presentation
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/ivanmakarychev/social-network/internal/authorization"
+	"github.com/ivanmakarychev/social-network/internal/config"
 	"github.com/ivanmakarychev/social-network/internal/repository"
 )
 
 // App обрабатывает запросы пользователей
 type App struct {
+	cfg               config.Server
 	authManager       authorization.Manager
 	profileProvider   repository.ProfileRepo
 	citiesProvider    repository.CitiesRepository
@@ -18,6 +21,7 @@ type App struct {
 }
 
 func NewApp(
+	cfg config.Server,
 	authManager authorization.Manager,
 	profileProvider repository.ProfileRepo,
 	citiesProvider repository.CitiesRepository,
@@ -25,6 +29,7 @@ func NewApp(
 	friendsRepo repository.FriendsRepo,
 ) *App {
 	return &App{
+		cfg:               cfg,
 		authManager:       authManager,
 		profileProvider:   profileProvider,
 		citiesProvider:    citiesProvider,
@@ -44,7 +49,7 @@ func (a *App) Run() error {
 	mux.HandleFunc("/", a.Home)
 
 	srv := &http.Server{
-		Addr:    ":80",
+		Addr:    fmt.Sprintf(":%s", a.cfg.Port),
 		Handler: mux,
 	}
 
