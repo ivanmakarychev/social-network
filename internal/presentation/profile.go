@@ -23,6 +23,10 @@ type OtherProfileData struct {
 	FriendshipProposed bool
 }
 
+type Profiles struct {
+	Profiles []models.Profile
+}
+
 // MyProfile домашняя страница пользователя
 func (a *App) MyProfile(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {

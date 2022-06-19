@@ -1,4 +1,25 @@
 {{define "content"}}
 <p>{{ .Data.Message}}</p>
-<a href="my/profile">Твой профиль</a>
+<p>
+    <a href="my/profile">Твой профиль</a>
+</p>
+
+<div>
+    <span>Попробуй найти кого-нибудь</span>
+    <form action="/profiles" method="get">
+        <input
+                name="name"
+                placeholder="Имя"
+                maxlength="32"
+                required
+        >
+        <input
+                name="surname"
+                placeholder="Фамилия"
+                maxlength="64"
+                required
+        >
+        <input type="submit" value="Найти">
+    </form>
+</div>
 {{end}}

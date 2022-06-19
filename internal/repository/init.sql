@@ -19,6 +19,8 @@ create table if not exists profile
     birth_date datetime    not null default CURRENT_TIMESTAMP
 );
 
+create index profile_name_surname_idx on profile (name, surname);
+
 create table if not exists profile_interests
 (
     profile_id  bigint not null,
