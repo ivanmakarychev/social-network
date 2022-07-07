@@ -10,10 +10,6 @@ import (
 	"github.com/Masterminds/squirrel"
 )
 
-func main() {
-	generate1MProfiles()
-}
-
 func generate1MProfiles() {
 	db, err := createMySQLConnectionWithRetry(1)
 	if err != nil {

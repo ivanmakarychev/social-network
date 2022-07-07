@@ -14,15 +14,14 @@ import (
 	"github.com/ivanmakarychev/social-network/internal/config"
 )
 
-func CreateMySQLConnectionAndInitDB(cfg config.Database) (*sql.DB, error) {
-	log.Println("creating mysql connection")
-	return createMySQLConnectionWithRetry(cfg, 60)
-}
+func createMySQLConnectionWithRetry(addr string, cfg config.Database, hm HostMapper, retries int) (*sql.DB, error) {
+	addrSplit := strings.Split(addr, ":")
+	host := hm(addrSplit[0])
 
-func createMySQLConnectionWithRetry(cfg config.Database, retries int) (*sql.DB, error) {
-	const dbSourceFmt = "%s:%s@(%s)/social-network?parseTime=true"
-	dbSource := fmt.Sprintf(dbSourceFmt, cfg.User, cfg.Password, cfg.Master)
+	const dbSourceFmt = "%s:%s@(%s:%s)/social-network?parseTime=true"
+	dbSource := fmt.Sprintf(dbSourceFmt, cfg.User, cfg.Password, host, addrSplit[1])
 
+	log.Println("trying to open db", dbSource)
 	db, err := sql.Open("mysql", dbSource)
 	for i := 0; err != nil && i < retries; i++ {
 		log.Println("retrying opening db")
@@ -42,15 +41,10 @@ func createMySQLConnectionWithRetry(cfg config.Database, retries int) (*sql.DB, 
 		log.Println("retrying pinging db")
 		err = db.Ping()
 	}
-	if err != nil {
-		return nil, err
-	}
-
-	err = initDB(db)
 	return db, err
 }
 
-func initDB(db *sql.DB) error {
+func initDB(db DBInstance) error {
 	log.Println("init DB started")
 
 	const path = "./internal/repository/init.sql"

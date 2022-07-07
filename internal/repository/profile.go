@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"log"
@@ -23,12 +22,12 @@ type FindProfilesRequest struct {
 }
 
 type ProfileRepoImpl struct {
-	db          *sql.DB
+	db          Cluster
 	friendsRepo FriendsRepo
 }
 
 func NewProfileRepoImpl(
-	db *sql.DB,
+	db Cluster,
 	friendsRepo FriendsRepo,
 ) *ProfileRepoImpl {
 	return &ProfileRepoImpl{
@@ -44,7 +43,7 @@ const (
 
 func (p *ProfileRepoImpl) CreateProfileID() (models.ProfileID, error) {
 	var err error
-	tx, err := p.db.Begin()
+	tx, err := p.db.Master().Begin()
 	if err != nil {
 		return 0, err
 	}
@@ -71,7 +70,7 @@ func (p *ProfileRepoImpl) CreateProfileID() (models.ProfileID, error) {
 
 func (p *ProfileRepoImpl) SaveProfile(profile models.Profile) error {
 	var err error
-	tx, err := p.db.Begin()
+	tx, err := p.db.Master().Begin()
 	if err != nil {
 		return err
 	}
@@ -143,7 +142,7 @@ func (p *ProfileRepoImpl) GetProfile(userID models.ProfileID) (models.Profile, e
 	if err != nil {
 		return profile, err
 	}
-	rows, err := p.db.Query(query, args...)
+	rows, err := p.db.Master().Query(query, args...)
 	if err != nil {
 		return profile, err
 	}
@@ -177,7 +176,7 @@ func (p *ProfileRepoImpl) GetProfile(userID models.ProfileID) (models.Profile, e
 	if err != nil {
 		return profile, err
 	}
-	rowsInterests, err := p.db.Query(query, args...)
+	rowsInterests, err := p.db.Master().Query(query, args...)
 	if err != nil {
 		return profile, err
 	}
@@ -205,7 +204,7 @@ func (p *ProfileRepoImpl) FindProfiles(request FindProfilesRequest) ([]models.Pr
 	if err != nil {
 		return nil, err
 	}
-	rows, err := p.db.Query(query, args...)
+	rows, err := p.db.Master().Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
