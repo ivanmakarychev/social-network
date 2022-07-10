@@ -32,7 +32,7 @@ func (f *FriendsRepoImpl) GetFriends(profileID models.ProfileID) ([]models.Frien
 	if err != nil {
 		return nil, err
 	}
-	rows, err := f.db.Master().Query(query, args...)
+	rows, err := f.db.Replica().Query(query, args...)
 	if err != nil {
 		return nil, err
 	}

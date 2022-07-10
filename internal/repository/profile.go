@@ -204,7 +204,7 @@ func (p *ProfileRepoImpl) FindProfiles(request FindProfilesRequest) ([]models.Pr
 	if err != nil {
 		return nil, err
 	}
-	rows, err := p.db.Master().Query(query, args...)
+	rows, err := p.db.Replica().Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
