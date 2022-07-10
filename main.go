@@ -16,7 +16,7 @@ func main() {
 		log.Fatal("failed to read config: ", err)
 	}
 
-	db := repository.NewMySQLCluster(cfg.Database)
+	db := repository.NewMySQLCluster(cfg.Database, nil)
 	err = db.Init()
 	if err != nil {
 		log.Fatal("failed to create MySQL cluster: ", err)

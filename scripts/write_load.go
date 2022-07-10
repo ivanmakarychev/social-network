@@ -2,33 +2,21 @@ package main
 
 import (
 	"fmt"
-	"github.com/ivanmakarychev/social-network/internal/config"
-	"github.com/ivanmakarychev/social-network/internal/repository"
 	"log"
 	"os"
 	"os/signal"
+
+	"github.com/ivanmakarychev/social-network/internal/repository"
 )
 
 func makeWriteLoad() {
-	l := writeLoader{
-		db: repository.NewMySQLCluster(config.Database{
-			User:     "social-network-user",
-			Password: "sQ7mDXwwLcfq",
-			Master:   "db1:3306",
-			Replicas: []string{
-				"db2:3307",
-				"db3:3308",
-			},
-		},
-			func(host string) string {
-				return "localhost"
-			},
-		),
-		nameGenerator: newNameGenerator(),
-	}
-	err := l.db.Connect()
+	db, err := createMySQLCluster()
 	if err != nil {
 		log.Fatal(err)
+	}
+	l := writeLoader{
+		db:            db,
+		nameGenerator: newNameGenerator(),
 	}
 	l.start()
 }

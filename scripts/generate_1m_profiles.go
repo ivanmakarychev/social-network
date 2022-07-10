@@ -11,7 +11,7 @@ import (
 )
 
 func generate1MProfiles() {
-	db, err := createMySQLConnectionWithRetry(1)
+	db, err := createMySQLCluster()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -32,10 +32,12 @@ func generate1MProfiles() {
 			log.Fatal(err)
 		}
 
-		_, err = db.Exec(query, args...)
+		_, err = db.Master().Exec(query, args...)
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		log.Println("inserted", k*1000, "rows")
 	}
 }
 

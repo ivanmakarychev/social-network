@@ -1,0 +1,1 @@
+wrk -c 10 -t 2 -d 10m --timeout 1m -s ./scripts/load-for-replication-test.lua --latency http://localhost > 10
