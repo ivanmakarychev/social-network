@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"database/sql"
-
 	"github.com/ivanmakarychev/social-network/internal/models"
 )
 
@@ -11,16 +9,16 @@ type CitiesRepository interface {
 }
 
 type CitiesRepositoryImpl struct {
-	db *sql.DB
+	db Cluster
 }
 
-func NewCitiesRepositoryImpl(db *sql.DB) *CitiesRepositoryImpl {
+func NewCitiesRepositoryImpl(db Cluster) *CitiesRepositoryImpl {
 	return &CitiesRepositoryImpl{db: db}
 }
 
 func (c *CitiesRepositoryImpl) GetCities() ([]models.City, error) {
 	var cities []models.City
-	rows, err := c.db.Query("select city_id, name from cities where city_id <> 0")
+	rows, err := c.db.Master().Query("select city_id, name from cities where city_id <> 0")
 	if err == nil {
 		defer rows.Close()
 		for rows.Next() {

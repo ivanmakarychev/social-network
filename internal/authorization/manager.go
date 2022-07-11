@@ -1,14 +1,13 @@
 package authorization
 
 import (
-	"database/sql"
 	"errors"
-	"github.com/ivanmakarychev/social-network/internal/models"
 	"log"
 	"regexp"
 
 	"github.com/Masterminds/squirrel"
-
+	"github.com/ivanmakarychev/social-network/internal/models"
+	"github.com/ivanmakarychev/social-network/internal/repository"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -30,10 +29,10 @@ type Manager interface {
 }
 
 type ManagerImpl struct {
-	db *sql.DB
+	db repository.Cluster
 }
 
-func NewManagerImpl(db *sql.DB) *ManagerImpl {
+func NewManagerImpl(db repository.Cluster) *ManagerImpl {
 	return &ManagerImpl{db: db}
 }
 
@@ -49,7 +48,7 @@ func (m *ManagerImpl) SaveLogin(profileID models.ProfileID, login LoginData) err
 	if err != nil {
 		return err
 	}
-	_, err = m.db.Exec(query, args...)
+	_, err = m.db.Master().Exec(query, args...)
 	return err
 }
 
@@ -63,7 +62,7 @@ func (m *ManagerImpl) GetUserID(login LoginData) (models.ProfileID, error) {
 	}
 	var profileID models.ProfileID
 	var hashedPassword []byte
-	rows, err := m.db.Query(query, args...)
+	rows, err := m.db.Master().Query(query, args...)
 	if err != nil {
 		log.Println("failed to get profile id by login: ", err)
 		return 0, ErrUnauthorized

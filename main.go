@@ -2,16 +2,24 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/ivanmakarychev/social-network/internal/authorization"
+	"github.com/ivanmakarychev/social-network/internal/config"
 	"github.com/ivanmakarychev/social-network/internal/presentation"
 	"github.com/ivanmakarychev/social-network/internal/repository"
 )
 
 func main() {
-	db, err := repository.CreateMySQLConnectionAndInitDB()
+	cfg, err := config.ReadConfig(os.Getenv("CONFIG_FILE"))
 	if err != nil {
-		log.Fatal("failed to create MySQL connection: ", err)
+		log.Fatal("failed to read config: ", err)
+	}
+
+	db := repository.NewMySQLCluster(cfg.Database, nil)
+	err = db.Init()
+	if err != nil {
+		log.Fatal("failed to create MySQL cluster: ", err)
 	}
 	defer db.Close()
 
@@ -22,6 +30,7 @@ func main() {
 	authManager := authorization.NewManagerImpl(db)
 
 	app := presentation.NewApp(
+		cfg.Server,
 		authManager,
 		profileRepo,
 		citiesRepo,

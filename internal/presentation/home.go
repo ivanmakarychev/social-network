@@ -21,10 +21,8 @@ type HomePageData struct {
 // Home домашняя страница
 func (a *App) Home(w http.ResponseWriter, _ *http.Request) {
 	data := ViewData{
-		Title: "Главная страница",
-		Data: HomePageData{
-			Message: "Социальная сеть №1: поиск единомышленников",
-		},
+		Title: "Социальная сеть №1: поиск единомышленников",
+		Data:  HomePageData{},
 	}
 	tmpl, err := loadTemplate("index.html")
 	if err != nil {

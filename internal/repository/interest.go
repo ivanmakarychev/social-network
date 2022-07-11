@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"database/sql"
-
 	"github.com/ivanmakarychev/social-network/internal/models"
 )
 
@@ -11,16 +9,16 @@ type InterestsRepository interface {
 }
 
 type InterestsRepositoryImpl struct {
-	db *sql.DB
+	db Cluster
 }
 
-func NewInterestsRepositoryImpl(db *sql.DB) *InterestsRepositoryImpl {
+func NewInterestsRepositoryImpl(db Cluster) *InterestsRepositoryImpl {
 	return &InterestsRepositoryImpl{db: db}
 }
 
 func (i *InterestsRepositoryImpl) GetInterests() ([]models.Interest, error) {
 	var interests []models.Interest
-	rows, err := i.db.Query("select interest_id, name from interests")
+	rows, err := i.db.Master().Query("select interest_id, name from interests")
 	if err != nil {
 		return interests, err
 	}

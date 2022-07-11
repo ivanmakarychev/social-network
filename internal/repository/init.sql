@@ -52,7 +52,7 @@ create table if not exists logins
 (
     login         varchar(32)   not null,
     password_hash varbinary(60) not null,
-    profile_id    bigint        not null,
+    profile_id    bigint        not null primary key,
     foreign key (profile_id) references profile (profile_id)
 );
 

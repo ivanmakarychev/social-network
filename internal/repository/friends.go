@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 
@@ -17,10 +16,10 @@ type FriendsRepo interface {
 }
 
 type FriendsRepoImpl struct {
-	db *sql.DB
+	db Cluster
 }
 
-func NewFriendsRepoImpl(db *sql.DB) *FriendsRepoImpl {
+func NewFriendsRepoImpl(db Cluster) *FriendsRepoImpl {
 	return &FriendsRepoImpl{db: db}
 }
 
@@ -33,7 +32,7 @@ func (f *FriendsRepoImpl) GetFriends(profileID models.ProfileID) ([]models.Frien
 	if err != nil {
 		return nil, err
 	}
-	rows, err := f.db.Query(query, args...)
+	rows, err := f.db.Replica().Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +58,7 @@ func (f *FriendsRepoImpl) GetFriendshipApplications(profileID models.ProfileID) 
 	if err != nil {
 		return nil, err
 	}
-	rows, err := f.db.Query(query, args...)
+	rows, err := f.db.Master().Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -81,13 +80,13 @@ func (f *FriendsRepoImpl) MakeFriend(owner, other models.ProfileID) error {
 		Columns("profile_id", "other_profile_id").
 		Values(owner, other).
 		ToSql()
-	_, err = f.db.Exec(query, args...)
+	_, err = f.db.Master().Exec(query, args...)
 	return err
 }
 
 func (f *FriendsRepoImpl) ConfirmFriendship(owner, other models.ProfileID) error {
 	var err error
-	tx, err := f.db.Begin()
+	tx, err := f.db.Master().Begin()
 	if err != nil {
 		return err
 	}

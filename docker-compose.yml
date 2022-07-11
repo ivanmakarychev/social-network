@@ -1,19 +1,96 @@
 version: "3"
 
 services:
-  db:
-    image: mysql
-    restart: always
+  db1:
+    image: mysql/mysql-server:8.0
+    container_name: db1
+    hostname: db1
+    restart: unless-stopped
+    ports:
+      - 3306:3306
     environment:
       MYSQL_ROOT_PASSWORD: 65hh0x21GJmlqM
       MYSQL_USER: social-network-user
       MYSQL_PASSWORD: sQ7mDXwwLcfq
       MYSQL_DATABASE: social-network
+    command: ["mysqld",
+              "--server-id=1",
+              "--gtid-mode=ON",
+              "--enforce-gtid-consistency=ON",
+              "--plugin-load-add=group_replication.so",
+              "--relay-log-recovery=ON",
+              "--loose-group-replication-start-on-boot=OFF",
+              "--loose-group-replication-group-name=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+              "--loose-group-replication-local-address=db1:33061",
+              "--loose-group-replication-group-seeds=db1:33061,db2:33061,db3:33061",
+              "--loose-group_replication_bootstrap_group=OFF"]
+    healthcheck:
+      test: "mysqladmin ping -u root -p$${MYSQL_ROOT_PASSWORD}"
+      interval: 2s
+      retries: 20
 
-  app:
-    image: social-network
+  db2:
+    image: mysql/mysql-server:8.0
+    container_name: db2
+    hostname: db2
+    restart: unless-stopped
+    ports:
+      - 3307:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: 65hh0x21GJmlqM
+      MYSQL_USER: social-network-user
+      MYSQL_PASSWORD: sQ7mDXwwLcfq
+      MYSQL_DATABASE: social-network
+    command: ["mysqld",
+              "--server-id=2",
+              "--gtid-mode=ON",
+              "--enforce-gtid-consistency=ON",
+              "--plugin-load-add=group_replication.so",
+              "--relay-log-recovery=ON",
+              "--loose-group-replication-start-on-boot=OFF",
+              "--loose-group-replication-group-name=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+              "--loose-group-replication-local-address=db2:33061",
+              "--loose-group-replication-group-seeds=db1:33061,db2:33061,db3:33061",
+              "--loose-group_replication_bootstrap_group=OFF"]
+    healthcheck:
+      test: "mysqladmin ping -u root -p$${MYSQL_ROOT_PASSWORD}"
+      interval: 2s
+      retries: 20
+
+  db3:
+    image: mysql/mysql-server:8.0
+    container_name: db3
+    hostname: db3
+    restart: unless-stopped
+    ports:
+      - 3308:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: 65hh0x21GJmlqM
+      MYSQL_USER: social-network-user
+      MYSQL_PASSWORD: sQ7mDXwwLcfq
+      MYSQL_DATABASE: social-network
+    command: ["mysqld",
+              "--server-id=3",
+              "--gtid-mode=ON",
+              "--enforce-gtid-consistency=ON",
+              "--plugin-load-add=group_replication.so",
+              "--relay-log-recovery=ON",
+              "--loose-group-replication-start-on-boot=OFF",
+              "--loose-group-replication-group-name=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+              "--loose-group-replication-local-address=db3:33061",
+              "--loose-group-replication-group-seeds=db1:33061,db2:33061,db3:33061",
+              "--loose-group_replication_bootstrap_group=OFF"]
+    healthcheck:
+      test: "mysqladmin ping -u root -p$${MYSQL_ROOT_PASSWORD}"
+      interval: 2s
+      retries: 20
+
+  service:
+    build: .
     ports:
       - 80:80
-    restart: always
+    restart: unless-stopped
     depends_on:
-      - db
+      - db1
+      - db2
+      - db3
