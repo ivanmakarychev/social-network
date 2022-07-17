@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 
@@ -29,6 +30,17 @@ func main() {
 	profileRepo := repository.NewProfileRepoImpl(db, friendsRepo)
 	authManager := authorization.NewManagerImpl(db)
 
+	dialogueDB, err := repository.NewShardedDialogueDB(cfg.DialogueDatabase, nil)
+	if err != nil {
+		log.Fatal("failed to create dialogue DB: ", err)
+	}
+	err = dialogueDB.Init(context.Background())
+	if err != nil {
+		log.Fatal("failed to init dialogue DB: ", err)
+	}
+	defer dialogueDB.Close()
+	dialogueRepo := repository.NewPostgreDialogueRepository(dialogueDB)
+
 	app := presentation.NewApp(
 		cfg.Server,
 		authManager,
@@ -36,6 +48,7 @@ func main() {
 		citiesRepo,
 		interestRepo,
 		friendsRepo,
+		dialogueRepo,
 	)
 
 	log.Fatal(app.Run())

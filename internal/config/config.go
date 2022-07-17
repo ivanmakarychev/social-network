@@ -8,8 +8,9 @@ import (
 
 //Config конфиг
 type Config struct {
-	Server   Server   `yaml:"server"`
-	Database Database `yaml:"database"`
+	Server           Server           `yaml:"server"`
+	Database         Database         `yaml:"database"`
+	DialogueDatabase DialogueDatabase `yaml:"dialogue_database"`
 }
 
 //Server конфиг HTTP-сервера
@@ -23,6 +24,14 @@ type Database struct {
 	Password string   `yaml:"pass"`
 	Master   string   `yaml:"master"`
 	Replicas []string `yaml:"replicas"`
+}
+
+//DialogueDatabase конфиг БД диалогов
+type DialogueDatabase struct {
+	User     string   `yaml:"user"`
+	Password string   `yaml:"pass"`
+	DbName   string   `yaml:"db_name"`
+	Shards   []string `yaml:"shards"`
 }
 
 //ReadConfig читает конфиг из файла

@@ -18,6 +18,7 @@ type App struct {
 	citiesProvider    repository.CitiesRepository
 	interestsProvider repository.InterestsRepository
 	friendsRepo       repository.FriendsRepo
+	dialogueRepo      repository.DialogueRepository
 }
 
 func NewApp(
@@ -27,6 +28,7 @@ func NewApp(
 	citiesProvider repository.CitiesRepository,
 	interestsProvider repository.InterestsRepository,
 	friendsRepo repository.FriendsRepo,
+	dialogueRepo repository.DialogueRepository,
 ) *App {
 	return &App{
 		cfg:               cfg,
@@ -35,6 +37,7 @@ func NewApp(
 		citiesProvider:    citiesProvider,
 		interestsProvider: interestsProvider,
 		friendsRepo:       friendsRepo,
+		dialogueRepo:      dialogueRepo,
 	}
 }
 
@@ -46,6 +49,10 @@ func (a *App) Run() error {
 	mux.HandleFunc("/profiles", a.FindProfiles)
 	mux.HandleFunc("/make-friend", a.BasicAuth(a.MakeFriend))
 	mux.HandleFunc("/confirm-friendship", a.BasicAuth(a.ConfirmFriendship))
+
+	mux.HandleFunc("/dialogue", a.BasicAuth(a.ShowDialogue))
+	mux.HandleFunc("/dialogue/message/send", a.BasicAuth(a.SendMessage))
+
 	mux.HandleFunc("/", a.Home)
 
 	srv := &http.Server{

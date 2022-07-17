@@ -85,6 +85,26 @@ services:
       interval: 2s
       retries: 20
 
+  dialogue1:
+    image: postgres
+    container_name: dialogue1
+    hostname: dialogue1
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dialogue-user
+      POSTGRES_PASSWORD: pG7mDXwwLcfq
+      POSTGRES_DB: dialogue
+
+  dialogue2:
+    image: postgres
+    container_name: dialogue2
+    hostname: dialogue2
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dialogue-user
+      POSTGRES_PASSWORD: pG7mDXwwLcfq
+      POSTGRES_DB: dialogue
+
   service:
     build: .
     ports:
@@ -94,3 +114,5 @@ services:
       - db1
       - db2
       - db3
+      - dialogue1
+      - dialogue2
