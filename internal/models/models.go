@@ -5,11 +5,16 @@ import "time"
 // ProfileID id профиля
 type ProfileID uint64
 
+// ProfileMain основная информация о профиле пользователя
+type ProfileMain struct {
+	ID      ProfileID
+	Name    string
+	Surname string
+}
+
 // Profile профиль пользователя
 type Profile struct {
-	ID                     ProfileID
-	Name                   string
-	Surname                string
+	ProfileMain
 	BirthDate              time.Time
 	City                   City
 	Friends                []Friend
