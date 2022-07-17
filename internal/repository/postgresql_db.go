@@ -49,16 +49,7 @@ func (s *ShardedDialogueDB) Init(ctx context.Context) error {
 		if err := initDialogueDBInstance(
 			ctx,
 			conn,
-			fmt.Sprintf("./internal/repository/init_dialogue_1_%d.sql", i+1),
-		); err != nil {
-			return err
-		}
-	}
-	for i, conn := range s.shards {
-		if err := initDialogueDBInstance(
-			ctx,
-			conn,
-			fmt.Sprintf("./internal/repository/init_dialogue_2_%d.sql", i+1),
+			fmt.Sprintf("./internal/repository/init_dialogue_%d.sql", i+1),
 		); err != nil {
 			return err
 		}
