@@ -1,6 +1,5 @@
 CREATE TABLE IF NOT EXISTS dialogue_message
 (
-    message_id        bigserial not null,
     profile_id_1      bigint    not null,
     profile_id_2      bigint    not null,
     profile_id_author bigint    not null,
@@ -11,7 +10,7 @@ CREATE TABLE IF NOT EXISTS dialogue_message
 CREATE TABLE IF NOT EXISTS dialogue_message_1 PARTITION OF dialogue_message
     FOR VALUES WITH (MODULUS 2, REMAINDER 0);
 
-CREATE INDEX IF NOT EXISTS dialogue_message_1_idx ON dialogue_message_1 (profile_id_1, profile_id_2);
+CREATE INDEX IF NOT EXISTS dialogue_message_1_idx ON dialogue_message_1 (profile_id_1, profile_id_2, ts);
 
 CREATE EXTENSION IF NOT EXISTS postgres_fdw;
 

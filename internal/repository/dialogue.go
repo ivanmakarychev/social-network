@@ -26,12 +26,12 @@ func (p *PostgreDialogueRepository) GetMessages(id models.DialogueID) ([]*models
 	id = normalizeDialogueID(id)
 	query, args, err := squirrel.StatementBuilder.
 		PlaceholderFormat(squirrel.Dollar).
-		Select("message_id", "profile_id_author", "ts", "text").
+		Select("profile_id_author", "ts", "text").
 		From("dialogue_message").
 		Where(squirrel.Eq{
 			"profile_id_1": id.ProfileID1,
 			"profile_id_2": id.ProfileID2,
-		}).OrderBy("message_id").ToSql()
+		}).OrderBy("ts").ToSql()
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (p *PostgreDialogueRepository) GetMessages(id models.DialogueID) ([]*models
 	messages := make([]*models.Message, 0)
 	for rows.Next() {
 		m := models.Message{}
-		err = rows.Scan(&m.ID, &m.Author, &m.TS, &m.Text)
+		err = rows.Scan(&m.Author, &m.TS, &m.Text)
 		if err != nil {
 			return nil, err
 		}
