@@ -1,0 +1,27 @@
+{{define "content"}}
+<div>
+  {{if not .Data.Messages}}
+  <p>Напиши что-нибудь</p>
+  {{else}}
+  <ul>
+    {{range .Data.Messages}}
+    <li>
+      <span>
+      {{if eq .Author $.Data.With.ID}}
+      {{$.Data.With.Name}}
+      {{else}}
+      ты
+      {{end}}
+        : {{.Text}}
+      </span>
+    </li>
+    {{end}}
+  </ul>
+  {{end}}
+</div>
+<form method="post" action="/dialogue/message/send">
+  <input type="hidden" name="to" value="{{.Data.With.ID}}">
+  <input type="text" name="text">
+  <input type="submit" value="Отправить">
+</form>
+{{end}}

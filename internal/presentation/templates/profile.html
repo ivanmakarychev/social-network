@@ -20,6 +20,12 @@
     {{end}}
 </div>
 <div>
+    <form action="/dialogue" method="get">
+        <input type="hidden" name="with" value="{{ .Data.Profile.ID}}">
+        <input type="submit" value="Поговорить">
+    </form>
+</div>
+<div>
     <p>Друзья:</p>
     <ul>
         {{range .Data.Profile.Friends}}
