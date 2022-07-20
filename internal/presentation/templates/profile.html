@@ -20,6 +20,16 @@
     {{end}}
 </div>
 <div>
+    {{if .Data.YouSubscribed}}
+    Ты подписан
+    {{else}}
+    <form action="/subscribe" method="post">
+        <input type="hidden" name="profile_id" value="{{ .Data.Profile.ID}}">
+        <input type="submit" value="Подписаться">
+    </form>
+    {{end}}
+</div>
+<div>
     <form action="/dialogue" method="get">
         <input type="hidden" name="with" value="{{ .Data.Profile.ID}}">
         <input type="submit" value="Поговорить">

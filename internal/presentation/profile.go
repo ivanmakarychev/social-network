@@ -21,6 +21,7 @@ type ProfileEditData struct {
 type OtherProfileData struct {
 	Profile            models.Profile
 	FriendshipProposed bool
+	YouSubscribed      bool
 }
 
 type Profiles struct {
@@ -62,12 +63,14 @@ func (a *App) Profile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, friendshipApplicationCreated := query["friendship_proposed"]
+	_, subscribed := query["subscribed"]
 
 	data := ViewData{
 		Title: fmt.Sprintf("%s %s", profile.Name, profile.Surname),
 		Data: OtherProfileData{
 			Profile:            profile,
 			FriendshipProposed: friendshipApplicationCreated,
+			YouSubscribed:      subscribed,
 		},
 	}
 	tmpl, err := loadTemplate("profile.html")

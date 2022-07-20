@@ -1,0 +1,17 @@
+{{define "content"}}
+<div>
+    {{if not .Data.Updates}}
+    <p>Здесь пока ничего нет. Подпишись на кого-нибудь</p>
+    {{else}}
+    <ul>
+        {{range .Data.Updates}}
+        <li>
+      <span>
+      {{.Author.Name}} в {{.DateFmt}}: {{.Text}}
+      </span>
+        </li>
+        {{end}}
+    </ul>
+    {{end}}
+</div>
+{{end}}

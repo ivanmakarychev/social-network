@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/ivanmakarychev/social-network/internal/tape"
+
 	"github.com/ivanmakarychev/social-network/internal/authorization"
 	"github.com/ivanmakarychev/social-network/internal/config"
 	"github.com/ivanmakarychev/social-network/internal/presentation"
@@ -29,6 +31,10 @@ func main() {
 	friendsRepo := repository.NewFriendsRepoImpl(db)
 	profileRepo := repository.NewProfileRepoImpl(db, friendsRepo)
 	authManager := authorization.NewManagerImpl(db)
+	updatesRepo := repository.NewClusterUpdatesRepo(db)
+
+	tapeProvider := tape.NewPersistentProvider(updatesRepo) //todo with cache
+	subscription := tape.NewSubscriptionImpl(updatesRepo)
 
 	dialogueDB, err := repository.NewShardedDialogueDB(cfg.DialogueDatabase, nil)
 	if err != nil {
@@ -49,6 +55,9 @@ func main() {
 		interestRepo,
 		friendsRepo,
 		dialogueRepo,
+		tapeProvider,
+		subscription,
+		tape.NewQueuePublisher(), //todo
 	)
 
 	log.Fatal(app.Run())

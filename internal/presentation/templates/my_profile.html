@@ -4,6 +4,11 @@
     <mark>Профиль сохранён</mark>
 </p>
 {{end}}
+<ul>
+    <li>
+        <a href="/tape">Лента</a>
+    </li>
+</ul>
 <form method="post">
     <input type="hidden" name="id" value="{{ .Data.Profile.ID}}">
 
@@ -34,6 +39,13 @@
 
     <input type="submit" value="Сохранить">
 </form>
+
+<form action="/update/publish" method="post">
+    <label for="text">Напишите новость</label>
+    <input id="text" name="text" type="text">
+    <input type="submit" value="Опубликовать">
+</form>
+
 <div>
     <p>Заявки в друзья:</p>
         {{range .Data.Profile.FriendshipApplications}}
