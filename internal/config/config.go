@@ -11,6 +11,7 @@ type Config struct {
 	Server           Server           `yaml:"server"`
 	Database         Database         `yaml:"database"`
 	DialogueDatabase DialogueDatabase `yaml:"dialogue_database"`
+	Updates          Updates          `yaml:"updates"`
 }
 
 //Server конфиг HTTP-сервера
@@ -32,6 +33,12 @@ type DialogueDatabase struct {
 	Password string   `yaml:"pass"`
 	DbName   string   `yaml:"db_name"`
 	Shards   []string `yaml:"shards"`
+}
+
+type Updates struct {
+	Limit               int     `yaml:"limit"`
+	SubscribersFraction float64 `yaml:"subscribers_fraction"`
+	QueueConnStr        string  `yaml:"queue_conn_str"`
 }
 
 //ReadConfig читает конфиг из файла

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/ivanmakarychev/social-network/internal/models"
 )
@@ -51,11 +52,13 @@ func (a *App) PublishUpdate(w http.ResponseWriter, r *http.Request) {
 	err = a.publisher.Publish(&models.Update{
 		Author: profile.ProfileMain,
 		Text:   texts[0],
+		TS:     time.Now(),
 	})
 	if err != nil {
 		handleError("publish update", "publish", err, w)
 		return
 	}
+	http.Redirect(w, r, "/success", http.StatusFound)
 }
 
 func (a *App) Subscribe(w http.ResponseWriter, r *http.Request) {

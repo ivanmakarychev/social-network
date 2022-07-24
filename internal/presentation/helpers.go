@@ -87,3 +87,7 @@ func onlyMethod(method string, h http.HandlerFunc) http.HandlerFunc {
 func onlyPOST(h http.HandlerFunc) http.HandlerFunc {
 	return onlyMethod(http.MethodPost, h)
 }
+
+func (a *App) Success(w http.ResponseWriter, _ *http.Request) {
+	loadAndExecuteTemplate("success.html", nil, w)
+}

@@ -67,6 +67,8 @@ func (a *App) Run() error {
 	mux.HandleFunc("/update/publish", onlyPOST(a.BasicAuth(a.PublishUpdate)))
 	mux.HandleFunc("/subscribe", onlyPOST(a.BasicAuth(a.Subscribe)))
 
+	mux.HandleFunc("/success", a.BasicAuth(a.Success))
+
 	mux.HandleFunc("/", a.Home)
 
 	srv := &http.Server{

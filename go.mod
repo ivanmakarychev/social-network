@@ -7,6 +7,7 @@ require (
 	github.com/dgraph-io/ristretto v0.1.0
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/jackc/pgx/v4 v4.16.1
+	github.com/rabbitmq/amqp091-go v1.4.0
 	golang.org/x/crypto v0.0.0-20220331220935-ae2d96664a29
 	gopkg.in/yaml.v2 v2.4.0
 )

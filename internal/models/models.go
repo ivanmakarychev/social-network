@@ -42,11 +42,10 @@ type Interest struct {
 }
 
 type Update struct {
-	ID      uint64
-	Author  ProfileMain
-	TS      time.Time
-	DateFmt string
-	Text    string
+	ID     uint64      `json:"id"`
+	Author ProfileMain `json:"author"`
+	TS     time.Time   `json:"ts"`
+	Text   string      `json:"text"`
 }
 
 type SubscriptionRq struct {

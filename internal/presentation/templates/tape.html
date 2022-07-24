@@ -7,7 +7,7 @@
         {{range .Data.Updates}}
         <li>
       <span>
-      {{.Author.Name}} в {{.DateFmt}}: {{.Text}}
+      {{.Author.Name}} в {{.TS.Format "15:04 01.02.2006"}}: {{.Text}}
       </span>
         </li>
         {{end}}
