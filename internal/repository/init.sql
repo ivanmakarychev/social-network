@@ -111,3 +111,23 @@ values (1, 'Футбол'),
        (18, 'Путешествия'),
        (19, 'Домашние животные')
 ON DUPLICATE KEY UPDATE interest_id=interest_id;
+
+create table if not exists subscriptions
+(
+    subscriber_id bigint not null,
+    publisher_id  bigint not null,
+    foreign key (subscriber_id) references profile (profile_id),
+    foreign key (publisher_id) references profile (profile_id),
+    primary key (subscriber_id, publisher_id)
+);
+
+create index subscriptions_publisher_id_idx on subscriptions (publisher_id);
+
+create table if not exists updates
+(
+    update_id    bigint    not null primary key AUTO_INCREMENT,
+    publisher_id bigint    not null,
+    ts           timestamp not null default CURRENT_TIMESTAMP,
+    text         text      not null,
+    foreign key (publisher_id) references profile (profile_id)
+);

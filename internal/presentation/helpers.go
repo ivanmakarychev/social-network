@@ -58,3 +58,36 @@ func handleError(actor, action string, err error, w http.ResponseWriter) {
 		))
 	http.Error(w, errorMessage, http.StatusInternalServerError)
 }
+
+func loadAndExecuteTemplate(template string, data any, w http.ResponseWriter) {
+	tmpl, err := loadTemplate(template)
+	if err != nil {
+		log.Printf("failed to load template %q: %s\n", template, err)
+		http.Error(w, errorMessage, http.StatusInternalServerError)
+		return
+	}
+	err = tmpl.ExecuteTemplate(w, "base", data)
+	if err != nil {
+		log.Println("bad template ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func onlyMethod(method string, h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case method:
+			h(w, r)
+		default:
+			http.Error(w, "", http.StatusMethodNotAllowed)
+		}
+	}
+}
+
+func onlyPOST(h http.HandlerFunc) http.HandlerFunc {
+	return onlyMethod(http.MethodPost, h)
+}
+
+func (a *App) Success(w http.ResponseWriter, _ *http.Request) {
+	loadAndExecuteTemplate("success.html", nil, w)
+}

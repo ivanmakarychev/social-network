@@ -41,6 +41,18 @@ type Interest struct {
 	Name string
 }
 
+type Update struct {
+	ID     uint64      `json:"id"`
+	Author ProfileMain `json:"author"`
+	TS     time.Time   `json:"ts"`
+	Text   string      `json:"text"`
+}
+
+type SubscriptionRq struct {
+	SubscriberID ProfileID
+	PublisherID  ProfileID
+}
+
 func (p Profile) BirthDateFmt() string {
 	return p.BirthDate.Format("2006-01-02")
 }

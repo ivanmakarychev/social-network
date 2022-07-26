@@ -8,6 +8,7 @@ import (
 	"github.com/ivanmakarychev/social-network/internal/authorization"
 	"github.com/ivanmakarychev/social-network/internal/config"
 	"github.com/ivanmakarychev/social-network/internal/repository"
+	"github.com/ivanmakarychev/social-network/internal/tape"
 )
 
 // App обрабатывает запросы пользователей
@@ -19,6 +20,9 @@ type App struct {
 	interestsProvider repository.InterestsRepository
 	friendsRepo       repository.FriendsRepo
 	dialogueRepo      repository.DialogueRepository
+	tapeProvider      tape.Provider
+	subscription      tape.Subscription
+	publisher         tape.Publisher
 }
 
 func NewApp(
@@ -29,6 +33,9 @@ func NewApp(
 	interestsProvider repository.InterestsRepository,
 	friendsRepo repository.FriendsRepo,
 	dialogueRepo repository.DialogueRepository,
+	tapeProvider tape.Provider,
+	subscription tape.Subscription,
+	publisher tape.Publisher,
 ) *App {
 	return &App{
 		cfg:               cfg,
@@ -38,6 +45,9 @@ func NewApp(
 		interestsProvider: interestsProvider,
 		friendsRepo:       friendsRepo,
 		dialogueRepo:      dialogueRepo,
+		tapeProvider:      tapeProvider,
+		subscription:      subscription,
+		publisher:         publisher,
 	}
 }
 
@@ -52,6 +62,12 @@ func (a *App) Run() error {
 
 	mux.HandleFunc("/dialogue", a.BasicAuth(a.ShowDialogue))
 	mux.HandleFunc("/dialogue/message/send", a.BasicAuth(a.SendMessage))
+
+	mux.HandleFunc("/tape", a.BasicAuth(a.Tape))
+	mux.HandleFunc("/update/publish", onlyPOST(a.BasicAuth(a.PublishUpdate)))
+	mux.HandleFunc("/subscribe", onlyPOST(a.BasicAuth(a.Subscribe)))
+
+	mux.HandleFunc("/success", a.BasicAuth(a.Success))
 
 	mux.HandleFunc("/", a.Home)
 

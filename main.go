@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/ivanmakarychev/social-network/internal/tape"
+
 	"github.com/ivanmakarychev/social-network/internal/authorization"
 	"github.com/ivanmakarychev/social-network/internal/config"
 	"github.com/ivanmakarychev/social-network/internal/presentation"
@@ -29,6 +31,17 @@ func main() {
 	friendsRepo := repository.NewFriendsRepoImpl(db)
 	profileRepo := repository.NewProfileRepoImpl(db, friendsRepo)
 	authManager := authorization.NewManagerImpl(db)
+	updatesRepo := repository.NewClusterUpdatesRepo(db)
+
+	updatesQueue := tape.NewQueueImpl(cfg.Updates.QueueConnStr)
+	err = updatesQueue.Init()
+	if err != nil {
+		log.Fatal("failed to init updates queue: ", err)
+	}
+	defer updatesQueue.Close()
+
+	tapeProvider := tape.NewCachingProvider(cfg.Updates, updatesRepo, updatesQueue)
+	subscription := tape.NewSubscriptionImpl(updatesRepo)
 
 	dialogueDB, err := repository.NewShardedDialogueDB(cfg.DialogueDatabase, nil)
 	if err != nil {
@@ -49,6 +62,9 @@ func main() {
 		interestRepo,
 		friendsRepo,
 		dialogueRepo,
+		tapeProvider,
+		subscription,
+		tape.NewQueuePublisher(updatesRepo, updatesQueue, cfg.Updates),
 	)
 
 	log.Fatal(app.Run())

@@ -105,6 +105,12 @@ services:
       POSTGRES_PASSWORD: pG7mDXwwLcfq
       POSTGRES_DB: dialogue
 
+  mq:
+    image: rabbitmq
+    container_name: mq
+    hostname: mq
+    restart: unless-stopped
+
   service:
     build: .
     ports:
@@ -116,3 +122,4 @@ services:
       - db3
       - dialogue1
       - dialogue2
+      - mq
