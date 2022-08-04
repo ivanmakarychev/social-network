@@ -1,9 +1,16 @@
 package models
 
-import "time"
+import (
+	"strconv"
+	"time"
+)
 
 // ProfileID id профиля
 type ProfileID uint64
+
+func (id ProfileID) String() string {
+	return strconv.FormatUint(uint64(id), 10)
+}
 
 // ProfileMain основная информация о профиле пользователя
 type ProfileMain struct {

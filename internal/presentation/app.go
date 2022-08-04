@@ -66,6 +66,7 @@ func (a *App) Run() error {
 	mux.HandleFunc("/tape", a.BasicAuth(a.Tape))
 	mux.HandleFunc("/update/publish", onlyPOST(a.BasicAuth(a.PublishUpdate)))
 	mux.HandleFunc("/subscribe", onlyPOST(a.BasicAuth(a.Subscribe)))
+	mux.Handle("/updates/ws", a.BasicAuth(a.UpdatesWS))
 
 	mux.HandleFunc("/success", a.BasicAuth(a.Success))
 

@@ -3,7 +3,7 @@
     {{if not .Data.Updates}}
     <p>Здесь пока ничего нет. Подпишись на кого-нибудь</p>
     {{else}}
-    <ul>
+    <ul id="updates">
         {{range .Data.Updates}}
         <li>
       <span>
@@ -14,4 +14,29 @@
     </ul>
     {{end}}
 </div>
+<script>
+    console.log("creating ws connection");
+
+    socket = new WebSocket("ws://" + location.host + "/updates/ws");
+
+    socket.onopen = function () {
+        console.log("connection opened")
+    };
+
+    socket.onclose = function () {
+        console.log("connection closed")
+    };
+
+    socket.onmessage = function(event) {
+        let html = document.getElementById("updates").innerHTML
+        let update = JSON.parse(event.data)
+        document.getElementById("updates").innerHTML =
+            `<li><span>${update['author_name']} в ${update['datetime']}: ${update['text']}</span></li>`
+            + html
+    };
+
+    socket.onerror = function(error) {
+        alert("Ошибка " + error.message);
+    };
+</script>
 {{end}}

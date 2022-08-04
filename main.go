@@ -33,14 +33,26 @@ func main() {
 	authManager := authorization.NewManagerImpl(db)
 	updatesRepo := repository.NewClusterUpdatesRepo(db)
 
-	updatesQueue := tape.NewQueueImpl(cfg.Updates.QueueConnStr)
+	updatesQueue := tape.NewBroadcastQueue(cfg.Updates.QueueConnStr)
 	err = updatesQueue.Init()
 	if err != nil {
 		log.Fatal("failed to init updates queue: ", err)
 	}
 	defer updatesQueue.Close()
 
-	tapeProvider := tape.NewCachingProvider(cfg.Updates, updatesRepo, updatesQueue)
+	updatesDirectQueue := tape.NewDirectQueue(cfg.Updates.QueueConnStr)
+	err = updatesDirectQueue.Init()
+	if err != nil {
+		log.Fatal("failed to init updates direct queue: ", err)
+	}
+	defer updatesDirectQueue.Close()
+
+	tapeProvider := tape.NewCachingProvider(
+		cfg.Updates,
+		updatesRepo,
+		updatesQueue,
+		tape.NewUpdatesSubscriptionManagerImpl(updatesDirectQueue),
+	)
 	subscription := tape.NewSubscriptionImpl(updatesRepo)
 
 	dialogueDB, err := repository.NewShardedDialogueDB(cfg.DialogueDatabase, nil)
@@ -64,7 +76,14 @@ func main() {
 		dialogueRepo,
 		tapeProvider,
 		subscription,
-		tape.NewQueuePublisher(updatesRepo, updatesQueue, cfg.Updates),
+		tape.NewRouterPublisher(
+			updatesRepo,
+			tape.NewCompositeUpdatesRouter(
+				updatesQueue,
+				updatesDirectQueue,
+			),
+			cfg.Updates,
+		),
 	)
 
 	log.Fatal(app.Run())

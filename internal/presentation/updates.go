@@ -1,10 +1,14 @@
 package presentation
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/gorilla/websocket"
 
 	"github.com/ivanmakarychev/social-network/internal/models"
 )
@@ -96,4 +100,65 @@ func (a *App) Subscribe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Redirect(w, r, fmt.Sprintf("/profile?id=%d&subscribed=1", otherID), http.StatusFound)
+}
+
+var upgrader = websocket.Upgrader{} // use default options
+
+func (a *App) UpdatesWS(w http.ResponseWriter, r *http.Request) {
+	profile, err := a.getOwnerProfileFromContext(r)
+	if err != nil {
+		handleError("updates ws", "get profile from context", err, w)
+		return
+	}
+
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		handleError("updates ws", "upgrade connection", err, w)
+		return
+	}
+	defer conn.Close()
+
+	updates, err := a.tapeProvider.SubscribeOnUpdates(profile.ID)
+	if err != nil {
+		handleError("updates ws", "subscribe on updates", err, w)
+		return
+	}
+
+	conn.SetCloseHandler(func(code int, text string) error {
+		err := a.tapeProvider.UnsubscribeFromUpdates(profile.ID)
+		if err != nil {
+			log.Println("updates ws failed to unsubscribe from updates:", err)
+		}
+		log.Println("updates ws conn closing")
+		message := websocket.FormatCloseMessage(code, "")
+		_ = conn.WriteControl(websocket.CloseMessage, message, time.Now().Add(time.Second))
+		return nil
+	})
+
+	log.Println("updates ws: connection is ready")
+
+	for upd := range updates {
+		updForWS := UpdateForWS{
+			AuthorName: upd.Author.Name,
+			Text:       upd.Text,
+			Datetime:   upd.TS.Format("15:04 01.02.2006"),
+		}
+		message, err := json.Marshal(updForWS)
+		if err != nil {
+			log.Println("updates ws failed to marshal message:", err)
+			break
+		}
+		err = conn.WriteMessage(websocket.TextMessage, message)
+		if err != nil {
+			log.Println("updates ws failed to write message:", err)
+			break
+		}
+		log.Println("updates ws sent message", string(message))
+	}
+}
+
+type UpdateForWS struct {
+	AuthorName string `json:"author_name"`
+	Text       string `json:"text"`
+	Datetime   string `json:"datetime"`
 }

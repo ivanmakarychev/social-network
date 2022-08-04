@@ -2,6 +2,7 @@ package tape
 
 import (
 	"log"
+	"sync"
 	"time"
 
 	"github.com/dgraph-io/ristretto"
@@ -13,20 +14,43 @@ import (
 type (
 	Provider interface {
 		GetTape(profileID models.ProfileID) ([]*models.Update, error)
+		SubscribeOnUpdates(profileID models.ProfileID) (<-chan *models.Update, error)
+		UnsubscribeFromUpdates(profileID models.ProfileID) error
 	}
 
 	CachingProvider struct {
-		cache *ristretto.Cache
-		repo  repository.UpdatesRepo
-		queue Queue
-		limit int
+		cache         *ristretto.Cache
+		repo          repository.UpdatesRepo
+		queue         BroadcastQueue
+		limit         int
+		subscriptions UpdatesSubscriptionManager
+	}
+
+	UpdatesSubscriptionManager interface {
+		Subscribe(id models.ProfileID) (<-chan *models.Update, error)
+		Unsubscribe(id models.ProfileID) error
+	}
+
+	UpdatesSubscriptionManagerImpl struct {
+		lock          sync.RWMutex
+		subscriptions map[models.ProfileID]chan *models.Update
+		queue         DirectQueue
 	}
 )
+
+func (p *CachingProvider) SubscribeOnUpdates(profileID models.ProfileID) (<-chan *models.Update, error) {
+	return p.subscriptions.Subscribe(profileID)
+}
+
+func (p *CachingProvider) UnsubscribeFromUpdates(profileID models.ProfileID) error {
+	return p.subscriptions.Unsubscribe(profileID)
+}
 
 func NewCachingProvider(
 	cfg config.Updates,
 	repo repository.UpdatesRepo,
-	queue Queue,
+	queue BroadcastQueue,
+	subscriptionManager UpdatesSubscriptionManager,
 ) *CachingProvider {
 	cache, err := ristretto.NewCache(&ristretto.Config{
 		NumCounters: 10_000_000,
@@ -37,10 +61,11 @@ func NewCachingProvider(
 		log.Fatalln("failed to init updates cache", err)
 	}
 	p := &CachingProvider{
-		cache: cache,
-		limit: cfg.Limit,
-		repo:  repo,
-		queue: queue,
+		cache:         cache,
+		limit:         cfg.Limit,
+		repo:          repo,
+		queue:         queue,
+		subscriptions: subscriptionManager,
 	}
 	queue.Subscribe(p.subscription)
 	return p
@@ -90,4 +115,42 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func (u *UpdatesSubscriptionManagerImpl) Subscribe(id models.ProfileID) (<-chan *models.Update, error) {
+	u.lock.Lock()
+	defer u.lock.Unlock()
+	if ch, ok := u.subscriptions[id]; ok {
+		return ch, nil
+	}
+	ch := make(chan *models.Update, 16)
+	u.subscriptions[id] = ch
+	u.queue.Subscribe(id, u.update)
+	return ch, nil
+}
+
+func (u *UpdatesSubscriptionManagerImpl) Unsubscribe(id models.ProfileID) error {
+	u.lock.Lock()
+	defer u.lock.Unlock()
+	u.queue.Unsubscribe(id)
+	if ch, ok := u.subscriptions[id]; ok {
+		close(ch)
+		delete(u.subscriptions, id)
+	}
+	return nil
+}
+
+func (u *UpdatesSubscriptionManagerImpl) update(upd UpdateWithSubscriber) {
+	u.lock.RLock()
+	defer u.lock.RUnlock()
+	if ch, ok := u.subscriptions[upd.Subscriber]; ok {
+		ch <- upd.Update
+	}
+}
+
+func NewUpdatesSubscriptionManagerImpl(q DirectQueue) *UpdatesSubscriptionManagerImpl {
+	return &UpdatesSubscriptionManagerImpl{
+		subscriptions: map[models.ProfileID]chan *models.Update{},
+		queue:         q,
+	}
 }
