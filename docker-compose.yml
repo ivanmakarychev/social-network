@@ -2,7 +2,8 @@ version: "3"
 
 services:
   db1:
-    image: mysql/mysql-server:8.0
+    platform: linux/x86_64
+    image: mysql:5.7
     container_name: db1
     hostname: db1
     restart: unless-stopped
@@ -14,6 +15,8 @@ services:
       MYSQL_PASSWORD: sQ7mDXwwLcfq
       MYSQL_DATABASE: social-network
     command: ["mysqld",
+              "--log-bin",
+              "--binlog-format=ROW",
               "--server-id=1",
               "--gtid-mode=ON",
               "--enforce-gtid-consistency=ON",
@@ -30,7 +33,8 @@ services:
       retries: 20
 
   db2:
-    image: mysql/mysql-server:8.0
+    platform: linux/x86_64
+    image: mysql:5.7
     container_name: db2
     hostname: db2
     restart: unless-stopped
@@ -42,6 +46,8 @@ services:
       MYSQL_PASSWORD: sQ7mDXwwLcfq
       MYSQL_DATABASE: social-network
     command: ["mysqld",
+              "--log-bin",
+              "--binlog-format=ROW",
               "--server-id=2",
               "--gtid-mode=ON",
               "--enforce-gtid-consistency=ON",
@@ -58,7 +64,8 @@ services:
       retries: 20
 
   db3:
-    image: mysql/mysql-server:8.0
+    platform: linux/x86_64
+    image: mysql:5.7
     container_name: db3
     hostname: db3
     restart: unless-stopped
@@ -70,6 +77,8 @@ services:
       MYSQL_PASSWORD: sQ7mDXwwLcfq
       MYSQL_DATABASE: social-network
     command: ["mysqld",
+              "--log-bin",
+              "--binlog-format=ROW",
               "--server-id=3",
               "--gtid-mode=ON",
               "--enforce-gtid-consistency=ON",
@@ -104,6 +113,12 @@ services:
       POSTGRES_USER: dialogue-user
       POSTGRES_PASSWORD: pG7mDXwwLcfq
       POSTGRES_DB: dialogue
+
+  mysql-tarantool-replicator:
+    build: mysql-tarantool-replicator
+    restart: unless-stopped
+    depends_on:
+      - db1
 
   service:
     build: .

@@ -6,6 +6,7 @@ import (
 
 	"github.com/Masterminds/squirrel"
 	"github.com/ivanmakarychev/social-network/internal/models"
+	tarantool "github.com/tarantool/go-tarantool"
 )
 
 type FriendsRepo interface {
@@ -17,6 +18,7 @@ type FriendsRepo interface {
 
 type FriendsRepoImpl struct {
 	db Cluster
+	t  *tarantool.Connection
 }
 
 func NewFriendsRepoImpl(db Cluster) *FriendsRepoImpl {
@@ -24,7 +26,7 @@ func NewFriendsRepoImpl(db Cluster) *FriendsRepoImpl {
 }
 
 func (f *FriendsRepoImpl) GetFriends(profileID models.ProfileID) ([]models.Friend, error) {
-	selectFriends := squirrel.Select("p.profile_id", "name", "surname").
+	selectFriends := squirrel.Select("p.profile_id", "first_name", "surname").
 		From("friends f").
 		Join(fmt.Sprintf("%s p on f.other_profile_id = p.profile_id", profileTableName)).
 		Where(squirrel.Eq{"f.profile_id": profileID})
@@ -50,7 +52,7 @@ func (f *FriendsRepoImpl) GetFriends(profileID models.ProfileID) ([]models.Frien
 }
 
 func (f *FriendsRepoImpl) GetFriendshipApplications(profileID models.ProfileID) ([]models.Friend, error) {
-	selectFriends := squirrel.Select("p.profile_id", "name", "surname").
+	selectFriends := squirrel.Select("p.profile_id", "first_name", "surname").
 		From("friendship_application f").
 		Join(fmt.Sprintf("%s p on f.profile_id = p.profile_id", profileTableName)).
 		Where(squirrel.Eq{"f.other_profile_id": profileID})

@@ -1,0 +1,9 @@
+{{define "content"}}
+<div>
+    <ul>
+        {{range .Data}}
+        <li><a href="/profile?id={{.ID}}">{{.Name}} {{.Surname}}</a></li>
+        {{end}}
+    </ul>
+</div>
+{{end}}

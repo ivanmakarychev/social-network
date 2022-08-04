@@ -13,7 +13,7 @@ func (a *App) FindProfiles(w http.ResponseWriter, r *http.Request) {
 
 	var findProfilesRq repository.FindProfilesRequest
 
-	namePrefixes := query["name"]
+	namePrefixes := query["first_name"]
 	if len(namePrefixes) > 0 {
 		findProfilesRq.NamePrefix = namePrefixes[0]
 	}

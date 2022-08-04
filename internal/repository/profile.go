@@ -86,7 +86,7 @@ func (p *ProfileRepoImpl) SaveProfile(profile models.Profile) error {
 	}()
 	b := squirrel.Update(profileTableName).
 		SetMap(map[string]interface{}{
-			"name":       profile.Name,
+			"first_name": profile.Name,
 			"surname":    profile.Surname,
 			"city_id":    profile.City.ID,
 			"birth_date": profile.BirthDate,
@@ -194,11 +194,11 @@ func (p *ProfileRepoImpl) GetProfile(userID models.ProfileID) (models.Profile, e
 }
 
 func (p *ProfileRepoImpl) FindProfiles(request FindProfilesRequest) ([]models.Profile, error) {
-	query, args, err := squirrel.Select("profile_id", "name", "surname").
+	query, args, err := squirrel.Select("profile_id", "first_name", "surname").
 		From(fmt.Sprintf("%s p", profileTableName)).
 		Where(squirrel.Like{
-			"name":    request.NamePrefix + "%",
-			"surname": request.SurnamePrefix + "%"}).
+			"first_name": request.NamePrefix + "%",
+			"surname":    request.SurnamePrefix + "%"}).
 		OrderBy("profile_id").
 		ToSql()
 	if err != nil {

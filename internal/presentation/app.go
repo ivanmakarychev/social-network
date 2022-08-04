@@ -49,6 +49,7 @@ func (a *App) Run() error {
 	mux.HandleFunc("/profiles", a.FindProfiles)
 	mux.HandleFunc("/make-friend", a.BasicAuth(a.MakeFriend))
 	mux.HandleFunc("/confirm-friendship", a.BasicAuth(a.ConfirmFriendship))
+	mux.HandleFunc("/friends", a.ShowFriends)
 
 	mux.HandleFunc("/dialogue", a.BasicAuth(a.ShowDialogue))
 	mux.HandleFunc("/dialogue/message/send", a.BasicAuth(a.SendMessage))

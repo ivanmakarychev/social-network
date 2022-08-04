@@ -2,6 +2,7 @@ package presentation
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -111,5 +112,39 @@ func (a *App) ConfirmFriendship(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/my/profile", http.StatusFound)
 	default:
 		http.Error(w, "", http.StatusMethodNotAllowed)
+	}
+}
+
+func (a *App) ShowFriends(w http.ResponseWriter, r *http.Request) {
+	ids := r.URL.Query()["profile_id"]
+	if len(ids) == 0 {
+		http.Error(w, "profile_id", http.StatusBadRequest)
+		return
+	}
+	id, err := strconv.ParseUint(ids[0], 10, 64)
+	if err != nil {
+		http.Error(w, "profile_id", http.StatusBadRequest)
+		return
+	}
+	friends, err := a.friendsRepo.GetFriends(models.ProfileID(id))
+	if err != nil {
+		handleError("show friends", "get friends", err, w)
+		return
+	}
+	data := ViewData{
+		Title: "Список друзей",
+		Data:  friends,
+	}
+	tmpl, err := loadTemplate("friends.html")
+	if err != nil {
+		log.Println("failed to load template: ", err)
+		http.Error(w, errorMessage, http.StatusInternalServerError)
+		return
+	}
+	err = tmpl.ExecuteTemplate(w, "base", data)
+	if err != nil {
+		log.Println("bad template ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }

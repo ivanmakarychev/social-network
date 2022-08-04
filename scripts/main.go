@@ -1,5 +1,5 @@
 package main
 
 func main() {
-	makeWriteLoad()
+	generate1MProfilesAndFriends()
 }
