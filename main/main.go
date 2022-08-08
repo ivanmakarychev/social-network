@@ -1,9 +1,10 @@
 package main
 
 import (
-	"context"
 	"log"
 	"os"
+
+	"github.com/ivanmakarychev/social-network/internal/services"
 
 	"github.com/ivanmakarychev/social-network/internal/tape"
 
@@ -43,16 +44,7 @@ func main() {
 	tapeProvider := tape.NewCachingProvider(cfg.Updates, updatesRepo, updatesQueue)
 	subscription := tape.NewSubscriptionImpl(updatesRepo)
 
-	dialogueDB, err := repository.NewShardedDialogueDB(cfg.DialogueDatabase, nil)
-	if err != nil {
-		log.Fatal("failed to create dialogue DB: ", err)
-	}
-	err = dialogueDB.Init(context.Background())
-	if err != nil {
-		log.Fatal("failed to init dialogue DB: ", err)
-	}
-	defer dialogueDB.Close()
-	dialogueRepo := repository.NewPostgreDialogueRepository(dialogueDB)
+	dialogueService := services.NewDialogueService(cfg.DialogueService.Connection)
 
 	app := presentation.NewApp(
 		cfg.Server,
@@ -61,7 +53,7 @@ func main() {
 		citiesRepo,
 		interestRepo,
 		friendsRepo,
-		dialogueRepo,
+		dialogueService,
 		tapeProvider,
 		subscription,
 		tape.NewQueuePublisher(updatesRepo, updatesQueue, cfg.Updates),

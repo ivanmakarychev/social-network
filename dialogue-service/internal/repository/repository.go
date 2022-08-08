@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/ivanmakarychev/social-network/internal/models"
+	"github.com/ivanmakarychev/social-network/dialogue-service/internal/models"
 )
 
 type DialogueRepository interface {

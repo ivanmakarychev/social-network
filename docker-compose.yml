@@ -111,8 +111,17 @@ services:
     hostname: mq
     restart: unless-stopped
 
+  dialogues:
+    build: ./dialogue-service
+    ports:
+      - 7001:80
+    restart: unless-stopped
+    depends_on:
+      - dialogue1
+      - dialogue2
+
   service:
-    build: .
+    build: ./main
     ports:
       - 80:80
     restart: unless-stopped
@@ -120,6 +129,5 @@ services:
       - db1
       - db2
       - db3
-      - dialogue1
-      - dialogue2
+      - dialogues
       - mq

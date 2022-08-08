@@ -17,10 +17,10 @@ type (
 	MessageID uint64
 
 	Message struct {
-		ID     MessageID
-		Author ProfileID
-		TS     time.Time
-		Text   string
+		ID     MessageID `json:"id"`
+		Author ProfileID `json:"author"`
+		TS     time.Time `json:"ts"`
+		Text   string    `json:"text"`
 	}
 
 	DialogueData struct {
@@ -29,7 +29,7 @@ type (
 	}
 
 	MessageData struct {
-		DialogueID
+		To ProfileID
 		*Message
 	}
 )
