@@ -15,26 +15,32 @@ type (
 		Update     *models.Update   `json:"update"`
 	}
 
-	Queue interface {
+	UpdatesRouter interface {
 		Add(ctx context.Context, u UpdateWithSubscriber) error
-		Subscribe(func(u UpdateWithSubscriber))
 	}
 
-	QueueImpl struct {
+	BroadcastQueue interface {
+		Add(ctx context.Context, u UpdateWithSubscriber) error
+		Subscribe(UpdateSubscriptionCallback)
+	}
+
+	BroadcastQueueImpl struct {
 		connStr       string
 		conn          *amqp.Connection
 		ch            *amqp.Channel
 		q             amqp.Queue
 		msgs          <-chan amqp.Delivery
-		subscriptions []func(u UpdateWithSubscriber)
+		subscriptions []UpdateSubscriptionCallback
 	}
+
+	UpdateSubscriptionCallback func(u UpdateWithSubscriber)
 )
 
-func NewQueueImpl(connStr string) *QueueImpl {
-	return &QueueImpl{connStr: connStr}
+func NewBroadcastQueue(connStr string) *BroadcastQueueImpl {
+	return &BroadcastQueueImpl{connStr: connStr}
 }
 
-func (q *QueueImpl) Add(ctx context.Context, u UpdateWithSubscriber) error {
+func (q *BroadcastQueueImpl) Add(ctx context.Context, u UpdateWithSubscriber) error {
 	body, err := json.Marshal(u)
 	if err != nil {
 		return err
@@ -52,11 +58,11 @@ func (q *QueueImpl) Add(ctx context.Context, u UpdateWithSubscriber) error {
 	return err
 }
 
-func (q *QueueImpl) Subscribe(f func(u UpdateWithSubscriber)) {
+func (q *BroadcastQueueImpl) Subscribe(f UpdateSubscriptionCallback) {
 	q.subscriptions = append(q.subscriptions, f)
 }
 
-func (q *QueueImpl) Init() error {
+func (q *BroadcastQueueImpl) Init() error {
 	var err error
 	q.conn, err = amqp.Dial(q.connStr)
 	if err != nil {
@@ -97,7 +103,7 @@ func (q *QueueImpl) Init() error {
 	return err
 }
 
-func (q *QueueImpl) Close() {
+func (q *BroadcastQueueImpl) Close() {
 	if q.conn != nil {
 		_ = q.conn.Close()
 	}
@@ -106,7 +112,7 @@ func (q *QueueImpl) Close() {
 	}
 }
 
-func (q *QueueImpl) consume(d amqp.Delivery) {
+func (q *BroadcastQueueImpl) consume(d amqp.Delivery) {
 	u := UpdateWithSubscriber{}
 	err := json.Unmarshal(d.Body, &u)
 	if err != nil {
