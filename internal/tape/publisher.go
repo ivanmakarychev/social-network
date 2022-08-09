@@ -2,6 +2,7 @@ package tape
 
 import (
 	"context"
+	"log"
 	"math"
 	"math/rand"
 	"time"
@@ -16,27 +17,45 @@ type (
 		Publish(u *models.Update) error
 	}
 
-	QueuePublisher struct {
-		repo  repository.UpdatesRepo
-		queue Queue
-		cfg   config.Updates
+	RouterPublisher struct {
+		repo   repository.UpdatesRepo
+		router UpdatesRouter
+		cfg    config.Updates
+	}
+
+	CompositeUpdatesRouter struct {
+		routers []UpdatesRouter
 	}
 )
 
-func NewQueuePublisher(
+func NewCompositeUpdatesRouter(routers ...UpdatesRouter) *CompositeUpdatesRouter {
+	return &CompositeUpdatesRouter{routers: routers}
+}
+
+func (c *CompositeUpdatesRouter) Add(ctx context.Context, u UpdateWithSubscriber) error {
+	for _, r := range c.routers {
+		err := r.Add(ctx, u)
+		if err != nil {
+			log.Println("failed to add update to router", err)
+		}
+	}
+	return nil
+}
+
+func NewRouterPublisher(
 	repo repository.UpdatesRepo,
-	q Queue,
+	r UpdatesRouter,
 	cfg config.Updates,
-) *QueuePublisher {
+) *RouterPublisher {
 	rand.Seed(time.Now().Unix())
-	return &QueuePublisher{
-		repo:  repo,
-		queue: q,
-		cfg:   cfg,
+	return &RouterPublisher{
+		repo:   repo,
+		router: r,
+		cfg:    cfg,
 	}
 }
 
-func (p *QueuePublisher) Publish(u *models.Update) error {
+func (p *RouterPublisher) Publish(u *models.Update) error {
 	err := p.repo.SaveUpdate(u)
 	if err != nil {
 		return err
@@ -51,7 +70,7 @@ func (p *QueuePublisher) Publish(u *models.Update) error {
 	rand.Shuffle(len(s), func(i, j int) { s[i], s[j] = s[j], s[i] })
 	numberOfReceivers := int(math.Ceil(float64(len(s)) * p.cfg.SubscribersFraction))
 	for _, r := range s[:numberOfReceivers] {
-		err = p.queue.Add(context.Background(), UpdateWithSubscriber{
+		err = p.router.Add(context.Background(), UpdateWithSubscriber{
 			Subscriber: r,
 			Update:     u,
 		})
