@@ -110,10 +110,7 @@ func (a *App) sendMessage(w http.ResponseWriter, r *http.Request) {
 		text := texts[0]
 		if len(text) > 0 {
 			err = a.dialogueRepo.SaveMessage(&models.MessageData{
-				DialogueID: models.DialogueID{
-					ProfileID1: profile.ID,
-					ProfileID2: recipientID,
-				},
+				To: recipientID,
 				Message: &models.Message{
 					Author: profile.ID,
 					Text:   text,

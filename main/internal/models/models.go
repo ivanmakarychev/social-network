@@ -72,3 +72,7 @@ func (p Profile) HasInterest(id uint64) bool {
 	}
 	return false
 }
+
+func (id ProfileID) String() string {
+	return strconv.FormatUint(uint64(id), 10)
+}
