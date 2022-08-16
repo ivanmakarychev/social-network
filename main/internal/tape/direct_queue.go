@@ -2,8 +2,12 @@ package tape
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/json"
+	"fmt"
 	"log"
+	"math"
+	"math/big"
 	"sync"
 
 	"github.com/ivanmakarychev/social-network/internal/models"
@@ -19,6 +23,7 @@ type (
 
 	DirectQueueImpl struct {
 		connStr       string
+		queueName     string
 		conn          *amqp.Connection
 		ch            *amqp.Channel
 		q             amqp.Queue
@@ -75,7 +80,7 @@ func (q *DirectQueueImpl) Unsubscribe(profileID models.ProfileID) {
 	err := q.ch.QueueUnbind(
 		q.q.Name,
 		profileID.String(),
-		directUpdatesQueueName,
+		q.queueName,
 		nil,
 	)
 	if err != nil {
@@ -105,8 +110,9 @@ func (q *DirectQueueImpl) Init() error {
 	if err != nil {
 		return err
 	}
+	q.queueName = generateQueueName()
 	q.q, err = q.ch.QueueDeclare(
-		directUpdatesQueueName,
+		q.queueName,
 		false,
 		false,
 		true,
@@ -170,7 +176,14 @@ func (q *DirectQueueImpl) getCallback(subscriber models.ProfileID) UpdateSubscri
 
 func emptyUpdateHandler(_ UpdateWithSubscriber) {}
 
+func generateQueueName() string {
+	randomInt, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt32))
+	if err != nil {
+		panic("rand.Int returned error: " + err.Error())
+	}
+	return fmt.Sprintf("updates_direct_queue_%d", randomInt)
+}
+
 const (
 	directUpdatesExchangeName = "updates_direct"
-	directUpdatesQueueName    = "updates_direct_queue"
 )
