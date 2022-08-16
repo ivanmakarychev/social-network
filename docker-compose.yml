@@ -121,7 +121,7 @@ services:
       - dialogue2
 
   service1:
-    build: .
+    build: ./main
     restart: unless-stopped
     depends_on:
       - db1
@@ -131,7 +131,7 @@ services:
       - mq
 
   service2:
-    build: .
+    build: ./main
     restart: unless-stopped
     depends_on:
       - db1
@@ -141,7 +141,7 @@ services:
       - mq
 
   service3:
-    build: .
+    build: ./main
     restart: unless-stopped
     depends_on:
       - db1
