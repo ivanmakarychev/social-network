@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ivanmakarychev/social-network/internal/config"
+	"github.com/ivanmakarychev/social-network/dialogue-service/internal/config"
 	"github.com/jackc/pgx/v4"
 )
 
@@ -138,4 +138,10 @@ func initDialogueDBInstance(ctx context.Context, db *pgx.Conn, scriptFile string
 	log.Println("init DB finished.", counter, "queries executed")
 
 	return nil
+}
+
+type HostMapper func(host string) string
+
+func defaultHostMapper(host string) string {
+	return host
 }
