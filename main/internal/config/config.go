@@ -29,7 +29,7 @@ type Database struct {
 
 //DialogueService конфиг сервиса диалогов
 type DialogueService struct {
-	Connection string `yaml:"connection"`
+	ServiceName string `yaml:"service_name"`
 }
 
 type Updates struct {
