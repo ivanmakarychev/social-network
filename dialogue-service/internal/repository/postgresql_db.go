@@ -45,6 +45,10 @@ func NewShardedDialogueDB(cfg config.DialogueDatabase, hm HostMapper) (*ShardedD
 }
 
 func (s *ShardedDialogueDB) Init(ctx context.Context) error {
+	if os.Getenv("INIT_DB") != "true" {
+		log.Println("db initialization skipped")
+		return nil
+	}
 	for i, conn := range s.shards {
 		if err := initDialogueDBInstance(
 			ctx,

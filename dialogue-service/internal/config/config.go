@@ -14,7 +14,8 @@ type Config struct {
 
 //Server конфиг HTTP-сервера
 type Server struct {
-	Port string `yaml:"port"`
+	Port        string `yaml:"port"`
+	ServiceName string `yaml:"service_name"`
 }
 
 //DialogueDatabase конфиг БД диалогов

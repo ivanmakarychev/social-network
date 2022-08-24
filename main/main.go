@@ -4,14 +4,13 @@ import (
 	"log"
 	"os"
 
-	"github.com/ivanmakarychev/social-network/internal/services"
-
-	"github.com/ivanmakarychev/social-network/internal/tape"
-
+	consulapi "github.com/hashicorp/consul/api"
 	"github.com/ivanmakarychev/social-network/internal/authorization"
 	"github.com/ivanmakarychev/social-network/internal/config"
 	"github.com/ivanmakarychev/social-network/internal/presentation"
 	"github.com/ivanmakarychev/social-network/internal/repository"
+	"github.com/ivanmakarychev/social-network/internal/services"
+	"github.com/ivanmakarychev/social-network/internal/tape"
 )
 
 func main() {
@@ -56,7 +55,7 @@ func main() {
 	)
 	subscription := tape.NewSubscriptionImpl(updatesRepo)
 
-	dialogueService := services.NewDialogueService(cfg.DialogueService.Connection)
+	dialogueService := services.NewDialogueService(cfg.DialogueService.ServiceName, makeConsulClient())
 
 	app := presentation.NewApp(
 		cfg.Server,
@@ -79,4 +78,12 @@ func main() {
 	)
 
 	log.Fatal(app.Run())
+}
+
+func makeConsulClient() *consulapi.Client {
+	consul, err := consulapi.NewClient(consulapi.DefaultConfig())
+	if err != nil {
+		log.Fatalf("failed to create consul client: %s", err)
+	}
+	return consul
 }

@@ -3,18 +3,21 @@ package services
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 
+	consulapi "github.com/hashicorp/consul/api"
 	"github.com/ivanmakarychev/social-network/internal/models"
+	"github.com/pkg/errors"
 )
 
 type (
 	DialogueService struct {
-		connStr string
+		serviceName  string
+		consulClient *consulapi.Client
 	}
 
 	PostMessageRq struct {
@@ -29,12 +32,19 @@ type (
 	}
 )
 
-func NewDialogueService(connStr string) *DialogueService {
-	return &DialogueService{connStr: connStr}
+func NewDialogueService(serviceName string, consulClient *consulapi.Client) *DialogueService {
+	return &DialogueService{
+		serviceName:  serviceName,
+		consulClient: consulClient,
+	}
 }
 
 func (d *DialogueService) GetMessages(id models.DialogueID) ([]*models.Message, error) {
-	req, err := http.NewRequest(http.MethodGet, d.formatURL("dialogue"), nil)
+	url, err := d.formatURL("dialogue")
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +82,11 @@ func (d *DialogueService) SaveMessage(msg *models.MessageData) error {
 	if err != nil {
 		return err
 	}
-	httpRq, err := http.NewRequest(http.MethodPost, d.formatURL("dialogue/message/send"), bytes.NewReader(b))
+	url, err := d.formatURL("dialogue/message/send")
+	if err != nil {
+		return err
+	}
+	httpRq, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(b))
 	if err != nil {
 		return err
 	}
@@ -89,8 +103,13 @@ func (d *DialogueService) SaveMessage(msg *models.MessageData) error {
 	return nil
 }
 
-func (d *DialogueService) formatURL(path string) string {
-	return fmt.Sprintf("%s/%s", d.connStr, path)
+func (d *DialogueService) formatURL(path string) (string, error) {
+	serviceEntries, _, err := d.consulClient.Health().Service(d.serviceName, "", true, nil)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to get service %q from consul", d.serviceName)
+	}
+	serviceEntry := serviceEntries[rand.Intn(len(serviceEntries))]
+	return fmt.Sprintf("http://%s:%d/%s", serviceEntry.Service.Address, serviceEntry.Service.Port, path), nil
 }
 
 func (d *DialogueService) do(req *http.Request) (*http.Response, error) {

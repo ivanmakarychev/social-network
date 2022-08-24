@@ -1,6 +1,9 @@
 version: "3"
 
 services:
+  consul:
+    image: consul
+
   db1:
     image: mysql/mysql-server:8.0
     container_name: db1
@@ -116,39 +119,69 @@ services:
     ports:
       - 7001:80
     restart: unless-stopped
+    environment:
+      - CONSUL_HTTP_ADDR=consul:8500
+      - CONSUL_SERVICE_ID=dialogues
+      - INIT_DB=true
     depends_on:
       - dialogue1
       - dialogue2
+      - consul
+
+  dialogues2:
+    build: ./dialogue-service
+    ports:
+      - 7002:80
+    restart: unless-stopped
+    environment:
+      - CONSUL_HTTP_ADDR=consul:8500
+      - CONSUL_SERVICE_ID=dialogues2
+    depends_on:
+      - dialogue1
+      - dialogue2
+      - consul
 
   service1:
     build: ./main
     restart: unless-stopped
+    environment:
+      - CONSUL_HTTP_ADDR=consul:8500
     depends_on:
       - db1
       - db2
       - db3
       - dialogues
+      - dialogues2
       - mq
+      - consul
 
   service2:
     build: ./main
     restart: unless-stopped
+    environment:
+      - CONSUL_HTTP_ADDR=consul:8500
     depends_on:
       - db1
       - db2
       - db3
       - dialogues
+      - dialogues2
       - mq
+      - consul
 
   service3:
     build: ./main
     restart: unless-stopped
+    environment:
+      - CONSUL_HTTP_ADDR=consul:8500
     depends_on:
       - db1
       - db2
       - db3
       - dialogues
+      - dialogues2
       - mq
+      - consul
 
   nginx:
     image: nginx:1.21
