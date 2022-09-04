@@ -8,6 +8,7 @@ import (
 	"github.com/ivanmakarychev/social-network/internal/authorization"
 	"github.com/ivanmakarychev/social-network/internal/config"
 	"github.com/ivanmakarychev/social-network/internal/repository"
+	"github.com/ivanmakarychev/social-network/internal/services"
 	"github.com/ivanmakarychev/social-network/internal/tape"
 )
 
@@ -23,6 +24,7 @@ type App struct {
 	tapeProvider      tape.Provider
 	subscription      tape.Subscription
 	publisher         tape.Publisher
+	counterService    services.CounterService
 }
 
 func NewApp(
@@ -36,6 +38,7 @@ func NewApp(
 	tapeProvider tape.Provider,
 	subscription tape.Subscription,
 	publisher tape.Publisher,
+	counterService services.CounterService,
 ) *App {
 	return &App{
 		cfg:               cfg,
@@ -48,6 +51,7 @@ func NewApp(
 		tapeProvider:      tapeProvider,
 		subscription:      subscription,
 		publisher:         publisher,
+		counterService:    counterService,
 	}
 }
 
@@ -55,7 +59,7 @@ func (a *App) Run() error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/register", a.Register)
 	mux.HandleFunc("/my/profile", a.BasicAuth(a.MyProfile))
-	mux.HandleFunc("/profile", a.Profile)
+	mux.HandleFunc("/profile", a.BasicAuthOptional(a.Profile))
 	mux.HandleFunc("/profiles", a.FindProfiles)
 	mux.HandleFunc("/make-friend", a.BasicAuth(a.MakeFriend))
 	mux.HandleFunc("/confirm-friendship", a.BasicAuth(a.ConfirmFriendship))

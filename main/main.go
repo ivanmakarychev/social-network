@@ -55,7 +55,9 @@ func main() {
 	)
 	subscription := tape.NewSubscriptionImpl(updatesRepo)
 
-	dialogueService := services.NewDialogueService(cfg.DialogueService.ServiceName, makeConsulClient())
+	consulClient := makeConsulClient()
+
+	dialogueService := services.NewDialogueService(cfg.DialogueService.ServiceName, consulClient)
 
 	app := presentation.NewApp(
 		cfg.Server,
@@ -74,6 +76,10 @@ func main() {
 				updatesDirectQueue,
 			),
 			cfg.Updates,
+		),
+		services.NewCounterService(
+			cfg.CounterService.ServiceName,
+			consulClient,
 		),
 	)
 

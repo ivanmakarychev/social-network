@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/ivanmakarychev/social-network/dialogue-service/internal/models"
 )
@@ -71,6 +72,26 @@ func (a *API) getDialogue(w http.ResponseWriter, r *http.Request) {
 		Messages:   messages,
 	}
 
+	var unreadMessagesTSs []time.Time
+	for _, msg := range messages {
+		if msg.Author == with && msg.Status != models.MessageStatusRead {
+			unreadMessagesTSs = append(unreadMessagesTSs, msg.TS)
+		}
+	}
+	if len(unreadMessagesTSs) != 0 {
+		err = a.saga.UpdateMessages(&models.AlterCounterRequest{
+			Key: models.UnreadMessagesCounterKey{
+				From: with,
+				To:   who,
+			},
+			Action:            models.ActionRead,
+			MessageTimestamps: unreadMessagesTSs,
+		})
+		if err != nil {
+			log.Println("failed to update read messages", err)
+		}
+	}
+
 	writeJSON("get dialogue", w, dialogueData)
 }
 
@@ -101,6 +122,8 @@ func (a *API) postMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ts := time.Now()
+
 	err = a.dialogueRepo.SaveMessage(&models.MessageData{
 		DialogueID: models.DialogueID{
 			ProfileID1: data.From,
@@ -109,11 +132,26 @@ func (a *API) postMessage(w http.ResponseWriter, r *http.Request) {
 		Message: &models.Message{
 			Author: data.From,
 			Text:   data.Text,
+			TS:     ts,
 		},
 	})
 	if err != nil {
 		handleError("post message", "save message", err, w)
 		return
 	}
+
+	err = a.saga.UpdateMessages(&models.AlterCounterRequest{
+		Key: models.UnreadMessagesCounterKey{
+			From: data.From,
+			To:   data.To,
+		},
+		Action:            models.ActionCreated,
+		MessageTimestamps: []time.Time{ts},
+	})
+	if err != nil {
+		handleError("post message", "saga update messages", err, w)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
 }

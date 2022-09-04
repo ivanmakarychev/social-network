@@ -32,7 +32,11 @@
 <div>
     <form action="/dialogue" method="get">
         <input type="hidden" name="with" value="{{ .Data.Profile.ID}}">
+        {{if .Data.UnreadMessages.IsValid}}
+        <input type="submit" value="Поговорить (новых сообщений: {{ .Data.UnreadMessages.Count}})">
+        {{else}}
         <input type="submit" value="Поговорить">
+        {{end}}
     </form>
 </div>
 <div>

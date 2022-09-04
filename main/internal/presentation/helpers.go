@@ -20,7 +20,8 @@ const (
 
 var (
 	funcMap = template.FuncMap{
-		"now": time.Now,
+		"now":         time.Now,
+		"printStatus": printStatus,
 	}
 )
 
@@ -43,6 +44,11 @@ func (a *App) getOwnerProfileFromContext(r *http.Request) (models.Profile, error
 		return p, nil
 	}
 	return models.Profile{}, errors.New("key 'user' in context has wrong type")
+}
+
+func (a *App) tryGetOwnerProfileFromContext(r *http.Request) (models.Profile, bool) {
+	p, err := a.getOwnerProfileFromContext(r)
+	return p, err == nil
 }
 
 func (a *App) getUserProfile(id models.ProfileID) (models.Profile, error) {
@@ -90,4 +96,17 @@ func onlyPOST(h http.HandlerFunc) http.HandlerFunc {
 
 func (a *App) Success(w http.ResponseWriter, _ *http.Request) {
 	loadAndExecuteTemplate("success.html", nil, w)
+}
+
+func printStatus(status int) string {
+	switch status {
+	case 0:
+		return "отправлено"
+	case 1:
+		return "доставлено"
+	case 2:
+		return "прочитано"
+	default:
+		return "неизвестный статус"
+	}
 }

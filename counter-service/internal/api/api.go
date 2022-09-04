@@ -3,35 +3,31 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/ivanmakarychev/social-network/counter-service/internal/models"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 
-	"github.com/ivanmakarychev/social-network/dialogue-service/internal/saga"
-
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/ivanmakarychev/social-network/dialogue-service/internal/config"
-	"github.com/ivanmakarychev/social-network/dialogue-service/internal/repository"
+	"github.com/ivanmakarychev/social-network/counter-service/internal/config"
+	"github.com/ivanmakarychev/social-network/counter-service/internal/repository"
 	"github.com/pkg/errors"
 	"github.com/urfave/negroni"
 )
 
 type API struct {
-	cfg          config.Server
-	dialogueRepo repository.DialogueRepository
-	saga         *saga.Saga
+	cfg           config.Service
+	counterGetter repository.CounterGetter
 }
 
 func NewAPI(
-	cfg config.Server,
-	dialogueRepo repository.DialogueRepository,
-	saga *saga.Saga,
+	cfg config.Service,
+	counterGetter repository.CounterGetter,
 ) *API {
 	return &API{
-		cfg:          cfg,
-		dialogueRepo: dialogueRepo,
-		saga:         saga,
+		cfg:           cfg,
+		counterGetter: counterGetter,
 	}
 }
 
@@ -43,9 +39,7 @@ func (a *API) Run() error {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/dialogue", logger(a.GetDialogue))
-	mux.HandleFunc("/dialogue/message/send", logger(a.PostMessage))
-
+	mux.HandleFunc("/counter/messages/unread", logger(a.getUnreadMessagesCount))
 	mux.HandleFunc("/healthcheck", a.healthcheck)
 
 	srv := &http.Server{
@@ -95,6 +89,36 @@ func (a *API) registerInConsul() error {
 	return err
 }
 
+func (a *API) getUnreadMessagesCount(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		from, err := getProfileID("from", r)
+		if err != nil {
+			http.Error(w, "from", http.StatusBadRequest)
+			return
+		}
+		to, err := getProfileID("to", r)
+		if err != nil {
+			http.Error(w, "to", http.StatusBadRequest)
+			return
+		}
+		count, err := a.counterGetter.Get(
+			r.Context(),
+			models.UnreadMessagesCounterKey{
+				From: from,
+				To:   to,
+			},
+		)
+		if err != nil {
+			handleError("getUnreadMessagesCount", "get counter", err, w)
+			return
+		}
+		writeJSON("getUnreadMessagesCount", w, models.Counter{Count: count})
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
 func (a *API) healthcheck(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
@@ -129,4 +153,19 @@ func logger(handlerFunc http.HandlerFunc) http.HandlerFunc {
 			lrw.Status(),
 		)
 	}
+}
+
+func getFromQuery[T any](parameterName string, r *http.Request, parser func(string) (T, error)) (T, error) {
+	values := r.URL.Query()[parameterName]
+	if len(values) == 0 {
+		return parser("")
+	}
+	return parser(values[0])
+}
+
+func getProfileID(parameterName string, r *http.Request) (models.ProfileID, error) {
+	return getFromQuery(parameterName, r, func(s string) (models.ProfileID, error) {
+		id, err := strconv.ParseUint(s, 10, 64)
+		return models.ProfileID(id), err
+	})
 }

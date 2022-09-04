@@ -21,6 +21,7 @@ type (
 		Author ProfileID `json:"author"`
 		TS     time.Time `json:"ts"`
 		Text   string    `json:"text"`
+		Status int       `json:"status"`
 	}
 
 	DialogueData struct {

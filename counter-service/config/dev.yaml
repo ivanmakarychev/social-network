@@ -1,0 +1,9 @@
+service:
+  port: 80
+  service_name: counters
+
+redis:
+  address: "redis:6379"
+
+mq:
+  conn_str: "amqp://guest:guest@mq:5672/"
