@@ -108,6 +108,9 @@ func (d *DialogueService) formatURL(path string) (string, error) {
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to get service %q from consul", d.serviceName)
 	}
+	if len(serviceEntries) == 0 {
+		return "", fmt.Errorf("no services %q to communicate", d.serviceName)
+	}
 	serviceEntry := serviceEntries[rand.Intn(len(serviceEntries))]
 	return fmt.Sprintf("http://%s:%d/%s", serviceEntry.Service.Address, serviceEntry.Service.Port, path), nil
 }

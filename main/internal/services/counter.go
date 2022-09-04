@@ -79,6 +79,9 @@ func (c *CounterServiceImpl) formatURL(path string) (string, error) {
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to get service %q from consul", c.serviceName)
 	}
+	if len(serviceEntries) == 0 {
+		return "", fmt.Errorf("no services %q to communicate", c.serviceName)
+	}
 	serviceEntry := serviceEntries[rand.Intn(len(serviceEntries))]
 	return fmt.Sprintf("http://%s:%d/%s", serviceEntry.Service.Address, serviceEntry.Service.Port, path), nil
 }
