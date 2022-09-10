@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ivanmakarychev/social-network/internal/services"
+
 	"github.com/ivanmakarychev/social-network/internal/models"
 )
 
@@ -22,6 +24,12 @@ type OtherProfileData struct {
 	Profile            models.Profile
 	FriendshipProposed bool
 	YouSubscribed      bool
+	UnreadMessages     UnreadMessagesData
+}
+
+type UnreadMessagesData struct {
+	Count   int
+	IsValid bool
 }
 
 type Profiles struct {
@@ -55,7 +63,15 @@ func (a *App) Profile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	profile, err := a.getUserProfile(models.ProfileID(id))
+	profileID := models.ProfileID(id)
+
+	ownerProfile, ownerProfileValid := a.tryGetOwnerProfileFromContext(r)
+	if ownerProfileValid && profileID == ownerProfile.ID {
+		http.Redirect(w, r, "/my/profile", http.StatusFound)
+		return
+	}
+
+	profile, err := a.getUserProfile(profileID)
 	if err != nil {
 		log.Println("failed to find profile ", id, ": ", err)
 		a.NotFound(w, r)
@@ -65,12 +81,30 @@ func (a *App) Profile(w http.ResponseWriter, r *http.Request) {
 	_, friendshipApplicationCreated := query["friendship_proposed"]
 	_, subscribed := query["subscribed"]
 
+	unreadMessagesData := UnreadMessagesData{}
+	if ownerProfileValid {
+		unreadMessagesRs, err := a.counterService.GetUnreadMessagesCounter(
+			r.Context(),
+			&services.GetMessagesCounterRq{
+				From: profileID,
+				To:   ownerProfile.ID,
+			},
+		)
+		if err == nil {
+			unreadMessagesData.Count = unreadMessagesRs.Count
+			unreadMessagesData.IsValid = true
+		} else {
+			log.Println("failed to get unread messages count ", id, ": ", err)
+		}
+	}
+
 	data := ViewData{
 		Title: fmt.Sprintf("%s %s", profile.Name, profile.Surname),
 		Data: OtherProfileData{
 			Profile:            profile,
 			FriendshipProposed: friendshipApplicationCreated,
 			YouSubscribed:      subscribed,
+			UnreadMessages:     unreadMessagesData,
 		},
 	}
 	tmpl, err := loadTemplate("profile.html")

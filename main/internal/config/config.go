@@ -12,6 +12,7 @@ type Config struct {
 	Database        Database        `yaml:"database"`
 	DialogueService DialogueService `yaml:"dialogue_service"`
 	Updates         Updates         `yaml:"updates"`
+	CounterService  CounterService  `yaml:"counter_service"`
 }
 
 //Server конфиг HTTP-сервера
@@ -29,6 +30,11 @@ type Database struct {
 
 //DialogueService конфиг сервиса диалогов
 type DialogueService struct {
+	ServiceName string `yaml:"service_name"`
+}
+
+//CounterService конфиг сервиса счетчиков
+type CounterService struct {
 	ServiceName string `yaml:"service_name"`
 }
 

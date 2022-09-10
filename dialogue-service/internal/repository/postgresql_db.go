@@ -133,7 +133,9 @@ func initDialogueDBInstance(ctx context.Context, db *pgx.Conn, scriptFile string
 			_, err = db.Exec(ctx, query)
 			if err != nil {
 				log.Println("[init db] bad query:", query, "[error]", err)
-				return fmt.Errorf("failed to execute sql script file: %s", err)
+				if !strings.Contains(err.Error(), "SQLSTATE 42701") {
+					return fmt.Errorf("failed to execute sql script file: %s", err)
+				}
 			}
 			counter++
 		}

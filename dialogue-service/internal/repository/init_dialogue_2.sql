@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS dialogue_message
     text              text      not null
 ) PARTITION BY HASH (profile_id_1, profile_id_2);
 
+ALTER TABLE dialogue_message ADD COLUMN status int not null default 2;
+
 CREATE TABLE IF NOT EXISTS dialogue_message_2 PARTITION OF dialogue_message
     FOR VALUES WITH (MODULUS 2, REMAINDER 1);
 

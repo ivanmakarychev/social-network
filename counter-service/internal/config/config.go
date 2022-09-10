@@ -8,25 +8,23 @@ import (
 
 //Config конфиг
 type Config struct {
-	Server           Server           `yaml:"server"`
-	DialogueDatabase DialogueDatabase `yaml:"dialogue_database"`
-	MQ               MQ               `yaml:"mq"`
+	Service Service `yaml:"service"`
+	Redis   Redis   `yaml:"redis"`
+	MQ      MQ      `yaml:"mq"`
 }
 
-//Server конфиг HTTP-сервера
-type Server struct {
+//Service конфиг сервиса
+type Service struct {
 	Port        string `yaml:"port"`
 	ServiceName string `yaml:"service_name"`
 }
 
-//DialogueDatabase конфиг БД диалогов
-type DialogueDatabase struct {
-	User     string   `yaml:"user"`
-	Password string   `yaml:"pass"`
-	DbName   string   `yaml:"db_name"`
-	Shards   []string `yaml:"shards"`
+// Redis конфиг редиса
+type Redis struct {
+	Address string `yaml:"address"`
 }
 
+// MQ конфиг очереди сообщений
 type MQ struct {
 	ConnStr string `yaml:"conn_str"`
 }

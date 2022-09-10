@@ -40,3 +40,13 @@ func (a *App) BasicAuth(next http.HandlerFunc) http.HandlerFunc {
 		http.Error(w, "Зарегистрируйтесь на странице /register", http.StatusUnauthorized)
 	}
 }
+
+func (a *App) BasicAuthOptional(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		profile, err := a.authorizeAndGetOwner(r)
+		if err == nil {
+			r = r.WithContext(context.WithValue(r.Context(), "user", profile))
+		}
+		next.ServeHTTP(w, r)
+	}
+}
