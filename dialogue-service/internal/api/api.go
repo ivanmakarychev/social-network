@@ -7,6 +7,9 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
+
+	"github.com/ivanmakarychev/social-network/dialogue-service/internal/metrics"
 
 	"github.com/ivanmakarychev/social-network/dialogue-service/internal/saga"
 
@@ -21,17 +24,20 @@ type API struct {
 	cfg          config.Server
 	dialogueRepo repository.DialogueRepository
 	saga         *saga.Saga
+	metrics      metrics.Metrics
 }
 
 func NewAPI(
 	cfg config.Server,
 	dialogueRepo repository.DialogueRepository,
 	saga *saga.Saga,
+	metrics metrics.Metrics,
 ) *API {
 	return &API{
 		cfg:          cfg,
 		dialogueRepo: dialogueRepo,
 		saga:         saga,
+		metrics:      metrics,
 	}
 }
 
@@ -43,8 +49,8 @@ func (a *API) Run() error {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/dialogue", logger(a.GetDialogue))
-	mux.HandleFunc("/dialogue/message/send", logger(a.PostMessage))
+	mux.HandleFunc("/dialogue", a.logger(a.GetDialogue))
+	mux.HandleFunc("/dialogue/message/send", a.logger(a.PostMessage))
 
 	mux.HandleFunc("/healthcheck", a.healthcheck)
 
@@ -119,14 +125,23 @@ func writeJSON(actor string, w http.ResponseWriter, data any) {
 	w.Header().Add("Content-Type", "application/json")
 }
 
-func logger(handlerFunc http.HandlerFunc) http.HandlerFunc {
+func (a *API) logger(handlerFunc http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
 		lrw := negroni.NewResponseWriter(w)
 		handlerFunc(lrw, r)
+		status := lrw.Status()
+		path := r.URL.Path
 		log.Printf("%s %s --> %d\n",
 			r.Method,
-			r.URL.Path,
-			lrw.Status(),
+			path,
+			status,
 		)
+		elapsed := time.Since(start).Seconds()
+		a.metrics.CountRequest(&metrics.RequestMetrics{
+			URL:      path,
+			HTTPCode: status,
+			Duration: elapsed,
+		})
 	}
 }
