@@ -1,5 +1,5 @@
 package main
 
 func main() {
-	generate1MProfilesAndFriends()
+	generate1MProfiles()
 }

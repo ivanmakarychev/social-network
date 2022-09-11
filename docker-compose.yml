@@ -1,6 +1,9 @@
 version: "3"
 
 services:
+  consul:
+    image: consul
+
   db1:
     platform: linux/x86_64
     image: mysql:5.7
@@ -8,7 +11,7 @@ services:
     hostname: db1
     restart: unless-stopped
     ports:
-      - 3306:3306
+      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: 65hh0x21GJmlqM
       MYSQL_USER: social-network-user
@@ -39,7 +42,7 @@ services:
     hostname: db2
     restart: unless-stopped
     ports:
-      - 3307:3306
+      - "3307:3306"
     environment:
       MYSQL_ROOT_PASSWORD: 65hh0x21GJmlqM
       MYSQL_USER: social-network-user
@@ -70,7 +73,7 @@ services:
     hostname: db3
     restart: unless-stopped
     ports:
-      - 3308:3306
+      - "3308:3306"
     environment:
       MYSQL_ROOT_PASSWORD: 65hh0x21GJmlqM
       MYSQL_USER: social-network-user
@@ -103,6 +106,10 @@ services:
       POSTGRES_USER: dialogue-user
       POSTGRES_PASSWORD: pG7mDXwwLcfq
       POSTGRES_DB: dialogue
+    depends_on:
+      - counter
+      - mq
+      - consul
 
   dialogue2:
     image: postgres
@@ -113,21 +120,122 @@ services:
       POSTGRES_USER: dialogue-user
       POSTGRES_PASSWORD: pG7mDXwwLcfq
       POSTGRES_DB: dialogue
-
-  mysql-tarantool-replicator:
-    build: mysql-tarantool-replicator
-    restart: unless-stopped
     depends_on:
-      - db1
+      - counter
+      - mq
+      - consul
 
-  service:
-    build: .
-    ports:
-      - 80:80
+  mq:
+    image: rabbitmq
+    container_name: mq
+    hostname: mq
     restart: unless-stopped
+
+  redis:
+    image: redis
+    container_name: redis
+    hostname: redis
+    restart: unless-stopped
+
+  counter:
+    build: ./counter-service
+    ports:
+      - "7003:80"
+    restart: unless-stopped
+    environment:
+      - CONSUL_HTTP_ADDR=consul:8500
+      - CONSUL_SERVICE_ID=dialogues2
+    depends_on:
+      - mq
+      - consul
+      - redis
+
+  dialogues:
+    build: ./dialogue-service
+    ports:
+      - "7001:80"
+    restart: unless-stopped
+    environment:
+      - CONSUL_HTTP_ADDR=consul:8500
+      - CONSUL_SERVICE_ID=dialogues
+      - INIT_DB=true
+    depends_on:
+      - dialogue1
+      - dialogue2
+      - consul
+
+  dialogues2:
+    build: ./dialogue-service
+    ports:
+      - "7002:80"
+    restart: unless-stopped
+    environment:
+      - CONSUL_HTTP_ADDR=consul:8500
+      - CONSUL_SERVICE_ID=dialogues2
+    depends_on:
+      - dialogue1
+      - dialogue2
+      - consul
+
+  service1:
+    build: ./main
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      - CONSUL_HTTP_ADDR=consul:8500
     depends_on:
       - db1
       - db2
       - db3
-      - dialogue1
-      - dialogue2
+      - dialogues
+      - dialogues2
+      - mq
+      - consul
+      - counter
+
+  service2:
+    build: ./main
+    restart: unless-stopped
+    environment:
+      - CONSUL_HTTP_ADDR=consul:8500
+    depends_on:
+      - db1
+      - db2
+      - db3
+      - dialogues
+      - dialogues2
+      - mq
+      - consul
+      - counter
+
+  service3:
+    build: ./main
+    restart: unless-stopped
+    environment:
+      - CONSUL_HTTP_ADDR=consul:8500
+    depends_on:
+      - db1
+      - db2
+      - db3
+      - dialogues
+      - dialogues2
+      - mq
+      - consul
+      - counter
+
+  nginx:
+    image: nginx:1.21
+    container_name: nginx-lb
+    restart: on-failure
+    volumes:
+      - "./nginx/default.conf:/etc/nginx/conf.d/default.conf"
+    ports:
+      - "80:80"
+      - "8080:8080"
+
+  haproxy:
+    image: haproxy:2.4
+    restart: on-failure
+    volumes:
+      - "./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg"

@@ -1,0 +1,27 @@
+# Server configurations
+server:
+  port: 80
+
+# Database credentials
+database:
+  user: social-network-user
+  pass: sQ7mDXwwLcfq
+  master: db1:3306
+  replicas:
+    - haproxy:3306
+
+dialogue_database:
+  user: dialogue-user
+  pass: pG7mDXwwLcfq
+  db_name: dialogue
+  shards:
+    - dialogue1:5432
+    - dialogue2:5432
+
+updates:
+  limit: 1000
+  subscribers_fraction: 0.5
+  queue_conn_str: amqp://guest:guest@mq:5672/
+
+dialogue_service:
+  connection: "http://dialogues:80"

@@ -1,0 +1,67 @@
+{{define "content"}}
+{{if .Data.Saved}}
+<p>
+    <mark>Профиль сохранён</mark>
+</p>
+{{end}}
+<ul>
+    <li>
+        <a href="/tape">Лента</a>
+    </li>
+</ul>
+<form method="post">
+    <input type="hidden" name="id" value="{{ .Data.Profile.ID}}">
+
+    <label for="name">Имя</label>
+    <input id="name" name="name" value="{{ .Data.Profile.Name}}" required maxlength="32">
+
+    <label for="surname">Фамилия</label>
+    <input id="surname" name="surname" value="{{ .Data.Profile.Surname}}" required maxlength="64">
+
+    <label for="birth_date">День рождения</label>
+    <input type="date" id="birth_date" name="birth_date" required
+           value="{{ .Data.Profile.BirthDateFmt}}"
+           min="1900-01-01" max="{{ now.Format "2006-01-02"}}">
+
+    <label for="city">Город</label>
+    <select id="city" name="city" required>
+        {{range .Data.Cities}}
+        <option value="{{ .ID}}" {{if (eq .ID $.Data.Profile.City.ID)}}selected{{end}}>{{ .Name}}</option>
+        {{end}}
+    </select>
+
+    <label for="interests">Интересы</label>
+    <select id="interests" name="interests" required multiple>
+        {{range .Data.Interests}}
+        <option value="{{ .ID}}" {{if $.Data.Profile.HasInterest .ID}}selected{{end}}>{{ .Name}}</option>
+        {{end}}
+    </select>
+
+    <input type="submit" value="Сохранить">
+</form>
+
+<form action="/update/publish" method="post">
+    <label for="text">Напишите новость</label>
+    <input id="text" name="text" type="text">
+    <input type="submit" value="Опубликовать">
+</form>
+
+<div>
+    <p>Заявки в друзья:</p>
+        {{range .Data.Profile.FriendshipApplications}}
+        <form action="/confirm-friendship" method="post">
+            <span>{{.Name}} {{.Surname}}</span>
+            <input type="hidden" name="other_profile_id" value="{{.ID}}">
+            <input type="submit" value="Подтвердить">
+        </form>
+        {{end}}
+</div>
+<div>
+    <p>Друзья:</p>
+    <ul>
+        {{range .Data.Profile.Friends}}
+        <li><a href="/profile?id={{.ID}}">{{.Name}} {{.Surname}}</a></li>
+        {{end}}
+    </ul>
+</div>
+{{end}}
