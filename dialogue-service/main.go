@@ -3,7 +3,12 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
+
+	"github.com/ivanmakarychev/social-network/dialogue-service/internal/metrics"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/ivanmakarychev/social-network/dialogue-service/internal/saga"
 
@@ -17,6 +22,15 @@ func main() {
 	if err != nil {
 		log.Fatal("failed to read config: ", err)
 	}
+
+	go func() {
+		promHandler := http.NewServeMux()
+		promHandler.Handle("/metrics", promhttp.Handler())
+		err := http.ListenAndServe(":2112", promHandler)
+		if err != nil {
+			log.Fatal("failed to start metrics handler on port 2112:", err)
+		}
+	}()
 
 	dialogueDB, err := repository.NewShardedDialogueDB(cfg.DialogueDatabase, nil)
 	if err != nil {
@@ -53,6 +67,7 @@ func main() {
 		cfg.Server,
 		dialogueRepo,
 		s,
+		metrics.New(),
 	)
 
 	log.Fatal(app.Run())
