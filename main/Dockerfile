@@ -2,7 +2,8 @@
 
 FROM golang:1.18-bullseye
 
-# RUN git clone https://github.com/ivanmakarychev/social-network.git
+RUN apt-get update; \
+    apt-get install -y libssl-dev
 
 COPY internal social-network/internal
 COPY go.mod social-network/go.mod

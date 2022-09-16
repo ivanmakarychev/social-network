@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM centos:centos7.5.1804
+FROM centos:centos7
 
 RUN yum -y install git ncurses-devel cmake gcc-c++ boost boost-devel wget unzip nano bzip2 mysql-devel mysql-lib
 
@@ -12,4 +12,4 @@ RUN make
 
 COPY replicatord.yml ./replicatord.yml
 
-CMD ["replicatord", "-c", "/usr/local/etc/replicatord.yml"]
+CMD ["replicatord", "-c", "./replicatord.yml"]

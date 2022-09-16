@@ -50,7 +50,7 @@ func (l *writeLoader) insert() {
 	nameSurname := l.nameGenerator.generate()
 	l.transactionCounter++
 	rs, err := l.db.Master().Exec(
-		"insert into profile (name, surname) values (?, ?)",
+		"insert into profile (first_name, surname) values (?, ?)",
 		nameSurname.name,
 		nameSurname.surname,
 	)

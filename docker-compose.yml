@@ -1,5 +1,9 @@
 version: "3"
 
+networks:
+  default:
+    name: social-net
+
 services:
   consul:
     image: consul

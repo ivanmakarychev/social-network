@@ -58,7 +58,7 @@ func (p *ProfileRepoImpl) CreateProfileID() (models.ProfileID, error) {
 		}
 	}()
 
-	_, err = tx.Exec(`insert into profile (name) values ('')`)
+	_, err = tx.Exec(`insert into profile (first_name) values ('')`)
 	if err != nil {
 		return 0, err
 	}
@@ -134,7 +134,7 @@ func (p *ProfileRepoImpl) SaveProfile(profile models.Profile) error {
 
 func (p *ProfileRepoImpl) GetProfile(userID models.ProfileID) (models.Profile, error) {
 	profile := models.Profile{}
-	selectProfile := squirrel.Select("p.name", "surname", "birth_date", "p.city_id", "c.name").
+	selectProfile := squirrel.Select("first_name", "surname", "birth_date", "p.city_id", "c.name").
 		From(fmt.Sprintf("%s p", profileTableName)).
 		Join("cities c on p.city_id = c.city_id").
 		Where(squirrel.Eq{"profile_id": userID})
