@@ -1,0 +1,26 @@
+mysql:
+  host: db1
+  port: 3306
+  user: repl_tarantool
+  password: 123456789
+  connect_retry: 15 # seconds
+
+tarantool:
+  host: tarantool:3301
+  binlog_pos_space: 512
+  binlog_pos_key: 0
+  connect_retry: 15 # seconds
+  sync_retry: 1000 # milliseconds
+
+mappings:
+  - database: social-network
+    table: profile
+    columns: [ profile_id, first_name, surname ]
+    space: 513
+    key_fields:  [ 0 ]
+
+  - database: social-network
+    table: friends
+    columns: [ profile_id, other_profile_id ]
+    space: 514
+    key_fields: [ 0 ]

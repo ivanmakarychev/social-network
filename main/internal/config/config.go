@@ -13,6 +13,7 @@ type Config struct {
 	DialogueService DialogueService `yaml:"dialogue_service"`
 	Updates         Updates         `yaml:"updates"`
 	CounterService  CounterService  `yaml:"counter_service"`
+	Tarantool       Tarantool       `yaml:"tarantool"`
 }
 
 //Server конфиг HTTP-сервера
@@ -42,6 +43,12 @@ type Updates struct {
 	Limit               int     `yaml:"limit"`
 	SubscribersFraction float64 `yaml:"subscribers_fraction"`
 	QueueConnStr        string  `yaml:"queue_conn_str"`
+}
+
+type Tarantool struct {
+	ConnStr string `yaml:"conn_str"`
+	User    string `yaml:"user"`
+	Pass    string `yaml:"pass"`
 }
 
 //ReadConfig читает конфиг из файла

@@ -2,10 +2,12 @@ package repository
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"log"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/ivanmakarychev/social-network/internal/models"
+	tarantool "github.com/tarantool/go-tarantool"
 )
 
 type FriendsRepo interface {
@@ -17,40 +19,38 @@ type FriendsRepo interface {
 
 type FriendsRepoImpl struct {
 	db Cluster
+	t  *tarantool.Connection
 }
 
-func NewFriendsRepoImpl(db Cluster) *FriendsRepoImpl {
-	return &FriendsRepoImpl{db: db}
+func NewFriendsRepoImpl(db Cluster, t *tarantool.Connection) *FriendsRepoImpl {
+	return &FriendsRepoImpl{
+		db: db,
+		t:  t,
+	}
 }
 
 func (f *FriendsRepoImpl) GetFriends(profileID models.ProfileID) ([]models.Friend, error) {
-	selectFriends := squirrel.Select("p.profile_id", "name", "surname").
-		From("friends f").
-		Join(fmt.Sprintf("%s p on f.other_profile_id = p.profile_id", profileTableName)).
-		Where(squirrel.Eq{"f.profile_id": profileID})
-	query, args, err := selectFriends.ToSql()
+	resp, err := f.t.Call("get_friends", []interface{}{profileID})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to get friends from Tarantool")
 	}
-	rows, err := f.db.Replica().Query(query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
 	var result []models.Friend
-	for rows.Next() {
-		friend := models.Friend{}
-		err = rows.Scan(&friend.ID, &friend.Name, &friend.Surname)
-		if err != nil {
-			return nil, err
+	for _, tuple := range resp.Tuples() {
+		if len(tuple) != 3 {
+			log.Println("friends repo: Tarantool returned bad tuple:", tuple)
+			continue
 		}
-		result = append(result, friend)
+		result = append(result, models.Friend{
+			ID:      models.ProfileID(tuple[0].(uint64)),
+			Name:    tuple[1].(string),
+			Surname: tuple[2].(string),
+		})
 	}
 	return result, nil
 }
 
 func (f *FriendsRepoImpl) GetFriendshipApplications(profileID models.ProfileID) ([]models.Friend, error) {
-	selectFriends := squirrel.Select("p.profile_id", "name", "surname").
+	selectFriends := squirrel.Select("p.profile_id", "first_name", "surname").
 		From("friendship_application f").
 		Join(fmt.Sprintf("%s p on f.profile_id = p.profile_id", profileTableName)).
 		Where(squirrel.Eq{"f.other_profile_id": profileID})

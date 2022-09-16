@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/tarantool/go-tarantool"
 	"log"
 	"os"
 
@@ -26,9 +27,18 @@ func main() {
 	}
 	defer db.Close()
 
+	tarantoolConn, err := tarantool.Connect(cfg.Tarantool.ConnStr, tarantool.Opts{
+		User: cfg.Tarantool.User,
+		Pass: cfg.Tarantool.Pass,
+	})
+	if err != nil {
+		log.Fatal("failed to connect Tarantool: ", err)
+	}
+	defer tarantoolConn.Close()
+
 	citiesRepo := repository.NewCitiesRepositoryImpl(db)
 	interestRepo := repository.NewInterestsRepositoryImpl(db)
-	friendsRepo := repository.NewFriendsRepoImpl(db)
+	friendsRepo := repository.NewFriendsRepoImpl(db, tarantoolConn)
 	profileRepo := repository.NewProfileRepoImpl(db, friendsRepo)
 	authManager := authorization.NewManagerImpl(db)
 	updatesRepo := repository.NewClusterUpdatesRepo(db)

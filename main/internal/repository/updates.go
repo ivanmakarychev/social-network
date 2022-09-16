@@ -40,7 +40,7 @@ func (r *ClusterUpdatesRepo) SaveUpdate(u *models.Update) error {
 }
 
 func (r *ClusterUpdatesRepo) GetUpdates(rq GetUpdatesRq) ([]*models.Update, error) {
-	query, args, err := squirrel.Select("u.update_id", "u.publisher_id", "u.ts", "u.text", "p.name", "p.surname").
+	query, args, err := squirrel.Select("u.update_id", "u.publisher_id", "u.ts", "u.text", "p.first_name", "p.surname").
 		From("updates u").
 		Join("subscriptions s on s.publisher_id = u.publisher_id").
 		Join("profile p on p.profile_id = u.publisher_id").

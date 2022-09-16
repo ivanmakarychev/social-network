@@ -1,13 +1,13 @@
 package authorization
 
 import (
-	"errors"
 	"log"
 	"regexp"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/ivanmakarychev/social-network/internal/models"
 	"github.com/ivanmakarychev/social-network/internal/repository"
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -58,7 +58,7 @@ func (m *ManagerImpl) GetUserID(login LoginData) (models.ProfileID, error) {
 		Where(squirrel.Eq{"login": login.Login}).
 		ToSql()
 	if err != nil {
-		return 0, err
+		return 0, errors.Wrap(err, "prepare sql query")
 	}
 	var profileID models.ProfileID
 	var hashedPassword []byte
@@ -77,6 +77,7 @@ func (m *ManagerImpl) GetUserID(login LoginData) (models.ProfileID, error) {
 		break
 	}
 	if profileID == 0 {
+		log.Println("profile not found in db")
 		return 0, ErrUnauthorized
 	}
 	err = bcrypt.CompareHashAndPassword(hashedPassword, []byte(login.Password))

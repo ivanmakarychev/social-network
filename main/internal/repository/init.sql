@@ -2,24 +2,24 @@ create table if not exists cities
 (
     city_id bigint       not null primary key,
     name    varchar(128) not null
-);
+) CHARACTER SET utf8;
 
 create table if not exists interests
 (
     interest_id bigint       not null primary key,
     name        varchar(256) not null
-);
+) CHARACTER SET utf8;
 
 create table if not exists profile
 (
     profile_id bigint      not null primary key AUTO_INCREMENT,
-    name       varchar(32) not null default '',
+    first_name       varchar(32) not null default '',
     surname    varchar(64) not null default '',
     city_id    bigint      not null default 0,
     birth_date datetime    not null default CURRENT_TIMESTAMP
-);
+) CHARACTER SET utf8;
 
-create index profile_name_surname_idx on profile (name, surname);
+create index profile_name_surname_idx on profile (first_name, surname);
 
 create table if not exists profile_interests
 (
@@ -28,7 +28,7 @@ create table if not exists profile_interests
     primary key (profile_id, interest_id),
     foreign key (profile_id) references profile (profile_id),
     foreign key (interest_id) references interests (interest_id)
-);
+) CHARACTER SET utf8;
 
 create table if not exists friends
 (
@@ -37,7 +37,7 @@ create table if not exists friends
     primary key (profile_id, other_profile_id),
     foreign key (profile_id) references profile (profile_id),
     foreign key (other_profile_id) references profile (profile_id)
-);
+) CHARACTER SET utf8;
 
 create table if not exists friendship_application
 (
@@ -46,7 +46,7 @@ create table if not exists friendship_application
     primary key (profile_id, other_profile_id),
     foreign key (profile_id) references profile (profile_id),
     foreign key (other_profile_id) references profile (profile_id)
-);
+) CHARACTER SET utf8;
 
 create table if not exists logins
 (
@@ -54,7 +54,7 @@ create table if not exists logins
     password_hash varbinary(60) not null,
     profile_id    bigint        not null primary key,
     foreign key (profile_id) references profile (profile_id)
-);
+) CHARACTER SET utf8;
 
 insert into cities (city_id, name)
 values (0, 'undefined'),

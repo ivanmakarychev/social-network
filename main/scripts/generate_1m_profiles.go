@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ivanmakarychev/social-network/internal/repository"
+
 	"github.com/Masterminds/squirrel"
 )
 
@@ -17,10 +19,25 @@ func generate1MProfiles() {
 	}
 	defer db.Close()
 
+	insert1MProfiles(db)
+}
+
+func generate1MProfilesAndFriends() {
+	db, err := createMySQLCluster()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	insert1MProfiles(db)
+	makeFriendships(db)
+}
+
+func insert1MProfiles(db *repository.MySQLCluster) {
 	g := newNameGenerator()
 
 	for k := 0; k < 1000; k++ {
-		insert := squirrel.Insert("profile").Columns("name", "surname")
+		insert := squirrel.Insert("profile").Columns("first_name", "surname")
 
 		for l := 0; l < 1000; l++ {
 			ns := g.generate()
@@ -38,6 +55,30 @@ func generate1MProfiles() {
 		}
 
 		log.Println("inserted", k*1000, "rows")
+	}
+}
+
+func makeFriendships(db *repository.MySQLCluster) {
+	for k := 0; k < 500; k++ {
+		for l := 0; l < 1000; l++ {
+			insert := squirrel.Insert("friends").
+				Columns("profile_id", "other_profile_id").
+				Suffix("on duplicate key update profile_id=profile_id")
+			profileID := k*1000 + l + 1
+			for m := 0; m < 30; m++ {
+				otherProfile := rand.Intn(1_000_000) + 1
+				insert = insert.Values(profileID, otherProfile).Values(otherProfile, profileID)
+			}
+			query, args, err := insert.ToSql()
+			if err != nil {
+				log.Fatal(err)
+			}
+			_, err = db.Master().Exec(query, args...)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+		log.Println("inserted", k*1000*60, "rows")
 	}
 }
 

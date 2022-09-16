@@ -2,7 +2,8 @@ package presentation
 
 import (
 	"context"
-	"errors"
+	"github.com/pkg/errors"
+	"log"
 	"net/http"
 
 	"github.com/ivanmakarychev/social-network/internal/authorization"
@@ -17,11 +18,11 @@ func (a *App) authorizeAndGetOwner(r *http.Request) (models.Profile, error) {
 			Password: password,
 		})
 		if err != nil {
-			return models.Profile{}, err
+			return models.Profile{}, errors.Wrap(err, "get user id")
 		}
 		profile, err := a.profileProvider.GetProfile(userID)
 		if err != nil {
-			return models.Profile{}, err
+			return models.Profile{}, errors.Wrap(err, "get profile")
 		}
 		return profile, nil
 	}
@@ -36,6 +37,7 @@ func (a *App) BasicAuth(next http.HandlerFunc) http.HandlerFunc {
 			next.ServeHTTP(w, r)
 			return
 		}
+		log.Println("failed to authorize:", err)
 		w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
 		http.Error(w, "Зарегистрируйтесь на странице /register", http.StatusUnauthorized)
 	}

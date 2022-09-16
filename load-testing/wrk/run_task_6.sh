@@ -1,0 +1,1 @@
+wrk -c 10 -t 2 -d 1m --timeout 1m -s ./scripts/get-friends.lua --latency http://localhost > task_6
